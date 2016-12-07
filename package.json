@@ -1,0 +1,27 @@
+{
+  "name": "www-write-music",
+  "private": true,
+  "dependencies": {
+    "global": "^4.3.1",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "retext-english": "^2.0.0",
+    "unified": "^5.1.0",
+    "unist-util-visit": "^1.1.1"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.1",
+    "xo": "^0.17.1"
+  },
+  "scripts": {
+    "build": "browserify index.js > build.js",
+    "lint": "xo",
+    "test": "npm run build && npm run lint"
+  },
+  "xo": {
+    "space": true,
+    "ignore": [
+      "build.js"
+    ]
+  }
+}
