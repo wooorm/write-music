@@ -10,7 +10,7 @@
     "unist-util-visit": "^1.1.1"
   },
   "devDependencies": {
-    "browserify": "^13.1.1",
+    "browserify": "^14.0.0",
     "xo": "^0.17.1"
   },
   "scripts": {
