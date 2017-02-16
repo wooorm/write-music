@@ -2,12 +2,12 @@
   "name": "www-write-music",
   "private": true,
   "dependencies": {
+    "debounce": "^1.0.0",
     "global": "^4.3.1",
-    "react": "^15.3.2",
-    "react-dom": "^15.3.2",
     "retext-english": "^2.0.0",
     "unified": "^5.1.0",
-    "unist-util-visit": "^1.1.1"
+    "unist-util-visit": "^1.1.1",
+    "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
     "browserify": "^14.0.0",

@@ -1,44 +1,47 @@
 var doc = require('global/document');
-var react = require('react');
-var dom = require('react-dom');
+var win = require('global/window');
+var createElement = require('virtual-dom/create-element');
+var diff = require('virtual-dom/diff');
+var patch = require('virtual-dom/patch');
+var h = require('virtual-dom/h');
 var unified = require('unified');
 var english = require('retext-english');
 var visit = require('unist-util-visit');
+var debounce = require('debounce');
 
-var h = react.createElement;
 var processor = unified().use(english);
 var hue = hues();
+var root = doc.getElementById('root');
+var tree = render(doc.getElementsByTagName('template')[0].innerHTML);
+var dom = root.appendChild(createElement(tree));
 
-dom.render(
-  h(react.createClass({
-    getInitialState: getInitialState,
-    onChange: onChange,
-    onScroll: onScroll,
-    render: render
-  })),
-  doc.getElementById('root')
-);
-
-function getInitialState() {
-  return {text: doc.getElementsByTagName('template')[0].innerHTML};
+function onchange(ev) {
+  var next = render(ev.target.value);
+  dom = patch(dom, diff(tree, next));
+  tree = next;
 }
 
-function onChange(ev) {
-  this.setState({text: ev.target.value});
+function resize() {
+  dom.lastChild.rows = rows(dom.firstChild);
 }
 
-function onScroll(ev) {
-  this.refs.draw.scrollTop = ev.target.scrollTop;
-}
-
-function render() {
-  var text = this.state.text;
+function render(text) {
   var tree = processor.run(processor.parse(text));
+  var change = debounce(onchange, 4);
   var key = 0;
 
+  setTimeout(resize, 4);
+
   return h('div', {className: 'editor'}, [
-    h('div', {key: 'draw', className: 'draw', ref: 'draw'}, pad(all(tree))),
-    h('textarea', {key: 'area', value: text, onChange: this.onChange, onScroll: this.onScroll})
+    h('div', {key: 'draw', className: 'draw'}, pad(all(tree))),
+    h('textarea', {
+      key: 'area',
+      value: text,
+      oninput: change,
+      onpaste: change,
+      onkeyup: change,
+      onmouseup: change
+    })
   ]);
 
   function all(node) {
@@ -114,4 +117,15 @@ function hues() {
   colors[7] = colors[8] = colors[9] = colors[10] = colors[11] = colors[12] = 120;
   colors.push(180);
   return colors;
+}
+
+function rows(node) {
+  if (!node) {
+    return;
+  }
+
+  return Math.ceil(
+    node.getBoundingClientRect().height /
+    parseInt(win.getComputedStyle(node).lineHeight, 10)
+  );
 }
