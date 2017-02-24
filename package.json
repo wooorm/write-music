@@ -4,8 +4,8 @@
   "dependencies": {
     "debounce": "^1.0.0",
     "global": "^4.3.1",
-    "retext-english": "^2.0.0",
-    "unified": "^5.1.0",
+    "retext-english": "^3.0.0",
+    "unified": "^6.1.0",
     "unist-util-visit": "^1.1.1",
     "virtual-dom": "^2.1.1"
   },

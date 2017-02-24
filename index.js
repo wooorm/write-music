@@ -26,7 +26,7 @@ function resize() {
 }
 
 function render(text) {
-  var tree = processor.run(processor.parse(text));
+  var tree = processor.runSync(processor.parse(text));
   var change = debounce(onchange, 4);
   var key = 0;
 

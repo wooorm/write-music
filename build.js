@@ -27,7 +27,7 @@ function resize() {
 }
 
 function render(text) {
-  var tree = processor.run(processor.parse(text));
+  var tree = processor.runSync(processor.parse(text));
   var change = debounce(onchange, 4);
   var key = 0;
 
@@ -131,7 +131,7 @@ function rows(node) {
   );
 }
 
-},{"debounce":7,"global/document":14,"global/window":15,"retext-english":49,"unified":52,"unist-util-visit":56,"virtual-dom/create-element":58,"virtual-dom/diff":59,"virtual-dom/h":60,"virtual-dom/patch":61}],2:[function(require,module,exports){
+},{"debounce":8,"global/document":13,"global/window":14,"retext-english":48,"unified":51,"unist-util-visit":56,"virtual-dom/create-element":58,"virtual-dom/diff":59,"virtual-dom/h":60,"virtual-dom/patch":61}],2:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -198,7 +198,7 @@ function iterate(values, callback, context) {
   }
 }
 
-},{"has":16}],3:[function(require,module,exports){
+},{"has":15}],3:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -527,6 +527,13 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],7:[function(require,module,exports){
+module.exports = Date.now || now
+
+function now() {
+    return new Date().getTime()
+}
+
+},{}],8:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -581,14 +588,7 @@ module.exports = function debounce(func, wait, immediate){
   };
 };
 
-},{"date-now":8}],8:[function(require,module,exports){
-module.exports = Date.now || now
-
-function now() {
-    return new Date().getTime()
-}
-
-},{}],9:[function(require,module,exports){
+},{"date-now":7}],9:[function(require,module,exports){
 'use strict';
 
 var OneVersionConstraint = require('individual/one-version');
@@ -610,311 +610,7 @@ function EvStore(elem) {
     return hash;
 }
 
-},{"individual/one-version":18}],10:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-function EventEmitter() {
-  this._events = this._events || {};
-  this._maxListeners = this._maxListeners || undefined;
-}
-module.exports = EventEmitter;
-
-// Backwards-compat with node 0.10.x
-EventEmitter.EventEmitter = EventEmitter;
-
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._maxListeners = undefined;
-
-// By default EventEmitters will print a warning if more than 10 listeners are
-// added to it. This is a useful default which helps finding memory leaks.
-EventEmitter.defaultMaxListeners = 10;
-
-// Obviously not all Emitters should be limited to 10. This function allows
-// that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function(n) {
-  if (!isNumber(n) || n < 0 || isNaN(n))
-    throw TypeError('n must be a positive number');
-  this._maxListeners = n;
-  return this;
-};
-
-EventEmitter.prototype.emit = function(type) {
-  var er, handler, len, args, i, listeners;
-
-  if (!this._events)
-    this._events = {};
-
-  // If there is no 'error' event listener then throw.
-  if (type === 'error') {
-    if (!this._events.error ||
-        (isObject(this._events.error) && !this._events.error.length)) {
-      er = arguments[1];
-      if (er instanceof Error) {
-        throw er; // Unhandled 'error' event
-      } else {
-        // At least give some kind of context to the user
-        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-        err.context = er;
-        throw err;
-      }
-    }
-  }
-
-  handler = this._events[type];
-
-  if (isUndefined(handler))
-    return false;
-
-  if (isFunction(handler)) {
-    switch (arguments.length) {
-      // fast cases
-      case 1:
-        handler.call(this);
-        break;
-      case 2:
-        handler.call(this, arguments[1]);
-        break;
-      case 3:
-        handler.call(this, arguments[1], arguments[2]);
-        break;
-      // slower
-      default:
-        args = Array.prototype.slice.call(arguments, 1);
-        handler.apply(this, args);
-    }
-  } else if (isObject(handler)) {
-    args = Array.prototype.slice.call(arguments, 1);
-    listeners = handler.slice();
-    len = listeners.length;
-    for (i = 0; i < len; i++)
-      listeners[i].apply(this, args);
-  }
-
-  return true;
-};
-
-EventEmitter.prototype.addListener = function(type, listener) {
-  var m;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events)
-    this._events = {};
-
-  // To avoid recursion in the case that type === "newListener"! Before
-  // adding it to the listeners, first emit "newListener".
-  if (this._events.newListener)
-    this.emit('newListener', type,
-              isFunction(listener.listener) ?
-              listener.listener : listener);
-
-  if (!this._events[type])
-    // Optimize the case of one listener. Don't need the extra array object.
-    this._events[type] = listener;
-  else if (isObject(this._events[type]))
-    // If we've already got an array, just append.
-    this._events[type].push(listener);
-  else
-    // Adding the second element, need to change to array.
-    this._events[type] = [this._events[type], listener];
-
-  // Check for listener leak
-  if (isObject(this._events[type]) && !this._events[type].warned) {
-    if (!isUndefined(this._maxListeners)) {
-      m = this._maxListeners;
-    } else {
-      m = EventEmitter.defaultMaxListeners;
-    }
-
-    if (m && m > 0 && this._events[type].length > m) {
-      this._events[type].warned = true;
-      console.error('(node) warning: possible EventEmitter memory ' +
-                    'leak detected. %d listeners added. ' +
-                    'Use emitter.setMaxListeners() to increase limit.',
-                    this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
-      }
-    }
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-EventEmitter.prototype.once = function(type, listener) {
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  var fired = false;
-
-  function g() {
-    this.removeListener(type, g);
-
-    if (!fired) {
-      fired = true;
-      listener.apply(this, arguments);
-    }
-  }
-
-  g.listener = listener;
-  this.on(type, g);
-
-  return this;
-};
-
-// emits a 'removeListener' event iff the listener was removed
-EventEmitter.prototype.removeListener = function(type, listener) {
-  var list, position, length, i;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events || !this._events[type])
-    return this;
-
-  list = this._events[type];
-  length = list.length;
-  position = -1;
-
-  if (list === listener ||
-      (isFunction(list.listener) && list.listener === listener)) {
-    delete this._events[type];
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-
-  } else if (isObject(list)) {
-    for (i = length; i-- > 0;) {
-      if (list[i] === listener ||
-          (list[i].listener && list[i].listener === listener)) {
-        position = i;
-        break;
-      }
-    }
-
-    if (position < 0)
-      return this;
-
-    if (list.length === 1) {
-      list.length = 0;
-      delete this._events[type];
-    } else {
-      list.splice(position, 1);
-    }
-
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.removeAllListeners = function(type) {
-  var key, listeners;
-
-  if (!this._events)
-    return this;
-
-  // not listening for removeListener, no need to emit
-  if (!this._events.removeListener) {
-    if (arguments.length === 0)
-      this._events = {};
-    else if (this._events[type])
-      delete this._events[type];
-    return this;
-  }
-
-  // emit removeListener for all listeners on all events
-  if (arguments.length === 0) {
-    for (key in this._events) {
-      if (key === 'removeListener') continue;
-      this.removeAllListeners(key);
-    }
-    this.removeAllListeners('removeListener');
-    this._events = {};
-    return this;
-  }
-
-  listeners = this._events[type];
-
-  if (isFunction(listeners)) {
-    this.removeListener(type, listeners);
-  } else if (listeners) {
-    // LIFO order
-    while (listeners.length)
-      this.removeListener(type, listeners[listeners.length - 1]);
-  }
-  delete this._events[type];
-
-  return this;
-};
-
-EventEmitter.prototype.listeners = function(type) {
-  var ret;
-  if (!this._events || !this._events[type])
-    ret = [];
-  else if (isFunction(this._events[type]))
-    ret = [this._events[type]];
-  else
-    ret = this._events[type].slice();
-  return ret;
-};
-
-EventEmitter.prototype.listenerCount = function(type) {
-  if (this._events) {
-    var evlistener = this._events[type];
-
-    if (isFunction(evlistener))
-      return 1;
-    else if (evlistener)
-      return evlistener.length;
-  }
-  return 0;
-};
-
-EventEmitter.listenerCount = function(emitter, type) {
-  return emitter.listenerCount(type);
-};
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-
-},{}],11:[function(require,module,exports){
+},{"individual/one-version":17}],10:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -1002,7 +698,7 @@ module.exports = function extend() {
 };
 
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
 var slice = Array.prototype.slice;
 var toStr = Object.prototype.toString;
@@ -1052,12 +748,12 @@ module.exports = function bind(that) {
     return bound;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var implementation = require('./implementation');
 
 module.exports = Function.prototype.bind || implementation;
 
-},{"./implementation":12}],14:[function(require,module,exports){
+},{"./implementation":11}],13:[function(require,module,exports){
 (function (global){
 var topLevel = typeof global !== 'undefined' ? global :
     typeof window !== 'undefined' ? window : {}
@@ -1076,7 +772,7 @@ if (typeof document !== 'undefined') {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"min-document":4}],15:[function(require,module,exports){
+},{"min-document":4}],14:[function(require,module,exports){
 (function (global){
 if (typeof window !== "undefined") {
     module.exports = window;
@@ -1089,12 +785,12 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],16:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var bind = require('function-bind');
 
 module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
 
-},{"function-bind":13}],17:[function(require,module,exports){
+},{"function-bind":12}],16:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1117,7 +813,7 @@ function Individual(key, value) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 var Individual = require('./index.js');
@@ -1141,7 +837,7 @@ function OneVersion(moduleName, version, defaultValue) {
     return Individual(key, defaultValue);
 }
 
-},{"./index.js":17}],19:[function(require,module,exports){
+},{"./index.js":16}],18:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1166,7 +862,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],20:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -1189,11 +885,20 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 module.exports = function isObject(x) {
 	return typeof x === "object" && x !== null;
+};
+
+},{}],21:[function(require,module,exports){
+'use strict';
+var toString = Object.prototype.toString;
+
+module.exports = function (x) {
+	var prototype;
+	return toString.call(x) === '[object Object]' && (prototype = Object.getPrototypeOf(x), prototype === null || prototype === Object.getPrototypeOf({}));
 };
 
 },{}],22:[function(require,module,exports){
@@ -1259,61 +964,7 @@ function nlcstToString(node, separator) {
 module.exports = nlcstToString;
 
 },{}],23:[function(require,module,exports){
-var wrappy = require('wrappy')
-module.exports = wrappy(once)
-module.exports.strict = wrappy(onceStrict)
-
-once.proto = once(function () {
-  Object.defineProperty(Function.prototype, 'once', {
-    value: function () {
-      return once(this)
-    },
-    configurable: true
-  })
-
-  Object.defineProperty(Function.prototype, 'onceStrict', {
-    value: function () {
-      return onceStrict(this)
-    },
-    configurable: true
-  })
-})
-
-function once (fn) {
-  var f = function () {
-    if (f.called) return f.value
-    f.called = true
-    return f.value = fn.apply(this, arguments)
-  }
-  f.called = false
-  return f
-}
-
-function onceStrict (fn) {
-  var f = function () {
-    if (f.called)
-      throw new Error(f.onceError)
-    f.called = true
-    return f.value = fn.apply(this, arguments)
-  }
-  var name = fn.name || 'Function wrapped with `once`'
-  f.onceError = name + " shouldn't be called more than once"
-  f.called = false
-  return f
-}
-
-},{"wrappy":84}],24:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014 Titus Wormer
- * @license MIT
- * @module parse-english
- * @fileoverview English natural language parser.
- */
-
 'use strict';
-
-/* eslint-env commonjs */
 
 /* Dependencies. */
 var Parser = require('parse-latin');
@@ -1321,450 +972,351 @@ var nlcstToString = require('nlcst-to-string');
 var visitChildren = require('unist-util-visit-children');
 var modifyChildren = require('unist-util-modify-children');
 
+/* Expose `ParseEnglish`. */
+module.exports = ParseEnglish;
+
+/* Inherit from `ParseLatin`. */
+ParserPrototype.prototype = Parser.prototype;
+
+var proto = new ParserPrototype();
+
+ParseEnglish.prototype = proto;
+
+/* Add modifiers to `parser`. */
+proto.tokenizeSentencePlugins = [
+  visitChildren(mergeEnglishElisionExceptions)
+].concat(proto.tokenizeSentencePlugins);
+
+proto.tokenizeParagraphPlugins = [
+  modifyChildren(mergeEnglishPrefixExceptions)
+].concat(proto.tokenizeParagraphPlugins);
+
+/* Transform English natural language into an NLCST-tree. */
+function ParseEnglish(doc, file) {
+  if (!(this instanceof ParseEnglish)) {
+    return new ParseEnglish(doc, file);
+  }
+
+  Parser.apply(this, arguments);
+}
+
+/* Constructor to create a `ParseEnglish` prototype. */
+function ParserPrototype() {}
+
 /* Match a blacklisted (case-insensitive) abbreviation
  * which when followed by a full-stop does not depict
  * a sentence terminal marker. */
 var EXPRESSION_ABBREVIATION_ENGLISH_PREFIX = new RegExp(
-    '^(' +
-        /*
-         * Business Abbreviations:
-         *
-         * Incorporation, Limited company.
-         */
+  '^(' +
+    /* Business Abbreviations:
+     * Incorporation, Limited company. */
+    'inc|ltd|' +
 
-        'inc|ltd|' +
+    /* English unit abbreviations:
+     * - Note that *Metric abbreviations* do not use
+     *   full stops.
+     * - Note that some common plurals are included,
+     *   although units should not be pluralised.
+     *
+     * barrel, cubic, dozen, fluid (ounce), foot, gallon, grain, gross,
+     * inch, karat / knot, pound, mile, ounce, pint, quart, square,
+     * tablespoon, teaspoon, yard. */
+    'bbls?|cu|doz|fl|ft|gal|gr|gro|in|kt|lbs?|mi|oz|pt|qt|sq|tbsp|' +
+    'tsp|yds?|' +
 
-        /*
-         * English unit abbreviations:
-         * - Note that *Metric abbreviations* do not use
-         *   full stops.
-         * - Note that some common plurals are included,
-         *   although units should not be pluralised.
-         *
-         * barrel, cubic, dozen, fluid (ounce), foot, gallon, grain, gross,
-         * inch, karat / knot, pound, mile, ounce, pint, quart, square,
-         * tablespoon, teaspoon, yard.
-         */
+    /* Abbreviations of time references:
+     * seconds, minutes, hours, Monday, Tuesday, *, Wednesday,
+     * Thursday, *, Friday, Saturday, Sunday, January, Februari, March,
+     * April, June, July, August, September, *, October, November,
+     * December. */
 
-        'bbls?|cu|doz|fl|ft|gal|gr|gro|in|kt|lbs?|mi|oz|pt|qt|sq|tbsp|' +
-        'tsp|yds?|' +
-
-        /*
-         * Abbreviations of time references:
-         *
-         * seconds, minutes, hours, Monday, Tuesday, *, Wednesday,
-         * Thursday, *, Friday, Saturday, Sunday, January, Februari, March,
-         * April, June, July, August, September, *, October, November,
-         * December.
-         */
-
-        'sec|min|hr|mon|tue|tues|wed|thu|thurs|fri|sat|sun|jan|feb|mar|' +
-        'apr|jun|jul|aug|sep|sept|oct|nov|dec' +
-    ')$'
-    /*
-     * NOTE! There's no `i` flag here because the value to
-     * test against should be all lowercase!
-     */
+    'sec|min|hr|mon|tue|tues|wed|thu|thurs|fri|sat|sun|jan|feb|mar|' +
+    'apr|jun|jul|aug|sep|sept|oct|nov|dec' +
+  ')$'
+  /*
+   * NOTE! There's no `i` flag here because the value to
+   * test against should be all lowercase!
+   */
 );
 
 /* Match a blacklisted (case-sensitive) abbreviation
  * which when followed by a full-stop does not depict
  * a sentence terminal marker. */
 var EXPRESSION_ABBREVIATION_ENGLISH_PREFIX_SENSITIVE = new RegExp(
-    '^(' +
-        /*
-         * Social:
-         *
-         * Mister, Mistress, Mistress, woman, Mademoiselle, Madame, Monsieur,
-         * Misters, Mesdames, Junior, Senior, *.
-         */
+  '^(' +
+    /* Social:
+     * Mister, Mistress, Mistress, woman, Mademoiselle, Madame, Monsieur,
+     * Misters, Mesdames, Junior, Senior, *. */
+    'Mr|Mrs|Miss|Ms|Mss|Mses|Mlle|Mme|M|Messrs|Mmes|Jr|Sr|Snr|' +
 
-        'Mr|Mrs|Miss|Ms|Mss|Mses|Mlle|Mme|M|Messrs|Mmes|Jr|Sr|Snr|' +
+    /* Rank and academic:
+     * Doctor, Magister, Attorney, Profesor, Honourable, Reverend,
+     * Father, Monsignor, Sister, Brother, Saint, President,
+     * Superintendent, Representative, Senator. */
+    'Dr|Mgr|Atty|Prof|Hon|Rev|Fr|Msgr|Sr|Br|St|Pres|Supt|Rep|Sen|' +
 
-        /*
-         * Rank and academic:
-         *
-         * Doctor, Magister, Attorney, Profesor, Honourable, Reverend,
-         * Father, Monsignor, Sister, Brother, Saint, President,
-         * Superintendent, Representative, Senator.
-         */
+    /* Rank and military:
+     * Governor, Ambassador, Treasurer, Secretary, Admiral, Brigadier,
+     * General, Commander, Colonel, Captain, Lieutenant, Major,
+     * Sergeant, Petty Officer, Warrant Officer, Purple Heart. */
+    'Gov|Amb|Treas|Sec|Amd|Brig|Gen|Cdr|Col|Capt|Lt|Maj|Sgt|Po|Wo|Ph|' +
 
-        'Dr|Mgr|Atty|Prof|Hon|Rev|Fr|Msgr|Sr|Br|St|Pres|Supt|Rep|Sen|' +
+    /* Common geographical abbreviations:
+     *
+     * Avenue, Boulevard, Mountain, Road, Building, National, *, Route, *,
+     * County, Park, Square, Drive, Port or Point, Street or State, Fort,
+     * Peninsula, Territory, Highway, Freeway, Parkway. */
+    'Ave|Blvd|Mt|Rd|Bldgs?|Nat|Natl|Rt|Rte|Co|Pk|Sq|Dr|Pt|St|' +
+    'Ft|Pen|Terr|Hwy|Fwy|Pkwy|' +
 
-        /*
-         * Rank and military:
-         *
-         * Governor, Ambassador, Treasurer, Secretary, Admiral, Brigadier,
-         * General, Commander, Colonel, Captain, Lieutenant, Major,
-         * Sergeant, Petty Officer, Warrant Officer, Purple Heart.
-         */
+    /* American state abbreviations:
+     * Alabama, Arizona, Arkansas, California, *, Colorado, *,
+     * Connecticut, Delaware, Florida, Georgia,Idaho, *, Illinois,
+     * Indiana, Iowa, Kansas, *, Kentucky, *, Louisiana, Maine, Maryland,
+     * Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Montana,
+     * Nebraska, *, Nevada, Mexico, Dakota, Oklahoma, *, Oregon,
+     * Pennsylvania, *, *, Tennessee, Texas, Utah, Vermont, Virginia,
+     * Washington, Wisconsin, *, Wyoming. */
+    'Ala|Ariz|Ark|Cal|Calif|Col|Colo|Conn|Del|Fla|Ga|Ida|Id|Ill|Ind|' +
+    'Ia|Kan|Kans|Ken|Ky|La|Me|Md|Mass|Mich|Minn|Miss|Mo|Mont|Neb|' +
+    'Nebr|Nev|Mex|Dak|Okla|Ok|Ore|Penna|Penn|Pa|Tenn|Tex|Ut|Vt|Va|' +
+    'Wash|Wis|Wisc|Wyo|' +
 
-        'Gov|Amb|Treas|Sec|Amd|Brig|Gen|Cdr|Col|Capt|Lt|Maj|Sgt|Po|Wo|Ph|' +
+    /* Canadian province abbreviations:
+     * Alberta, Manitoba, Ontario, Quebec, *, Saskatchewan,
+     * Yukon Territory. */
+    'Alta|Man|Ont|Qu\u00E9|Que|Sask|Yuk|' +
 
-        /*
-         * Common geographical abbreviations:
-         *
-         * Avenue, Boulevard, Mountain, Road, Building, National, *, Route, *,
-         * County, Park, Square, Drive, Port or Point, Street or State, Fort,
-         * Peninsula, Territory, Highway, Freeway, Parkway.
-         */
-
-        'Ave|Blvd|Mt|Rd|Bldgs?|Nat|Natl|Rt|Rte|Co|Pk|Sq|Dr|Pt|St|' +
-        'Ft|Pen|Terr|Hwy|Fwy|Pkwy|' +
-
-        /*
-         * American state abbreviations:
-         *
-         * Alabama, Arizona, Arkansas, California, *, Colorado, *,
-         * Connecticut, Delaware, Florida, Georgia,Idaho, *, Illinois,
-         * Indiana, Iowa, Kansas, *, Kentucky, *, Louisiana, Maine, Maryland,
-         * Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Montana,
-         * Nebraska, *, Nevada, Mexico, Dakota, Oklahoma, *, Oregon,
-         * Pennsylvania, *, *, Tennessee, Texas, Utah, Vermont, Virginia,
-         * Washington, Wisconsin, *, Wyoming.
-         */
-
-        'Ala|Ariz|Ark|Cal|Calif|Col|Colo|Conn|Del|Fla|Ga|Ida|Id|Ill|Ind|' +
-        'Ia|Kan|Kans|Ken|Ky|La|Me|Md|Mass|Mich|Minn|Miss|Mo|Mont|Neb|' +
-        'Nebr|Nev|Mex|Dak|Okla|Ok|Ore|Penna|Penn|Pa|Tenn|Tex|Ut|Vt|Va|' +
-        'Wash|Wis|Wisc|Wyo|' +
-
-        /*
-         * Canadian province abbreviations:
-         *
-         * Alberta, Manitoba, Ontario, Quebec, *, Saskatchewan,
-         * Yukon Territory.
-         */
-
-        'Alta|Man|Ont|Qu\u00E9|Que|Sask|Yuk|' +
-
-        /*
-         * English county abbreviations:
-         *
-         * Bedfordshire, Berkshire, Buckinghamshire, Cambridgeshire,
-         * Cheshire, Cornwall, Cumberland, Derbyshire, *, Devon, Dorset,
-         * Durham, Gloucestershire, Hampshire, Herefordshire, *,
-         * Hertfordshire, Huntingdonshire, Lancashire, Leicestershire,
-         * Lincolnshire, Middlesex, *, *, Norfolk, Northamptonshire,
-         * Northumberland, *, Nottinghamshire, Oxfordshire, Rutland,
-         * Shropshire, Somerset, Staffordshire, *, Suffolk, Surrey,
-         * Sussex, *, Warwickshire, *, *, Westmorland, Wiltshire,
-         * Worcestershire, Yorkshire.
-         */
-
-        'Beds|Berks|Bucks|Cambs|Ches|Corn|Cumb|Derbys|Derbs|Dev|Dor|Dur|' +
-        'Glos|Hants|Here|Heref|Herts|Hunts|Lancs|Leics|Lincs|Mx|Middx|Mddx|' +
-        'Norf|Northants|Northumb|Northd|Notts|Oxon|Rut|Shrops|Salop|Som|' +
-        'Staffs|Staf|Suff|Sy|Sx|Ssx|Warks|War|Warw|Westm|Wilts|Worcs|Yorks' +
-    ')$'
+    /* English county abbreviations:
+     * Bedfordshire, Berkshire, Buckinghamshire, Cambridgeshire,
+     * Cheshire, Cornwall, Cumberland, Derbyshire, *, Devon, Dorset,
+     * Durham, Gloucestershire, Hampshire, Herefordshire, *,
+     * Hertfordshire, Huntingdonshire, Lancashire, Leicestershire,
+     * Lincolnshire, Middlesex, *, *, Norfolk, Northamptonshire,
+     * Northumberland, *, Nottinghamshire, Oxfordshire, Rutland,
+     * Shropshire, Somerset, Staffordshire, *, Suffolk, Surrey,
+     * Sussex, *, Warwickshire, *, *, Westmorland, Wiltshire,
+     * Worcestershire, Yorkshire. */
+    'Beds|Berks|Bucks|Cambs|Ches|Corn|Cumb|Derbys|Derbs|Dev|Dor|Dur|' +
+    'Glos|Hants|Here|Heref|Herts|Hunts|Lancs|Leics|Lincs|Mx|Middx|Mddx|' +
+    'Norf|Northants|Northumb|Northd|Notts|Oxon|Rut|Shrops|Salop|Som|' +
+    'Staffs|Staf|Suff|Sy|Sx|Ssx|Warks|War|Warw|Westm|Wilts|Worcs|Yorks' +
+  ')$'
 );
 
 /* Match a blacklisted word which when followed by
  * an apostrophe depicts elision. */
 var EXPRESSION_ELISION_ENGLISH_PREFIX = new RegExp(
-    '^(' +
-        /*
-         * Includes:
-         *
-         * - o' > of;
-         * - ol' > old.
-         */
-
-        'o|ol' +
-    ')$'
+  '^(' +
+    /* Includes:
+     * - o' > of;
+     * - ol' > old. */
+    'o|ol' +
+  ')$'
 );
 
 /* Match a blacklisted word which when preceded by
  * an apostrophe depicts elision. */
 var EXPRESSION_ELISION_ENGLISH_AFFIX = new RegExp(
-    '^(' +
-        /*
-         * Includes:
-         *
-         * - 'im > him;
-         * - 'er > her;
-         * - 'em > them.
-         * - 'cause > because.
-         */
+  '^(' +
+    /* Includes:
+     * - 'im > him;
+     * - 'er > her;
+     * - 'em > them.
+     * - 'cause > because. */
+    'im|er|em|cause|' +
 
-        'im|er|em|cause|' +
+    /* Includes:
+     * - 'twas > it was;
+     * - 'tis > it is;
+     * - 'twere > it were. */
+    'twas|tis|twere|' +
 
-        /*
-         * Includes:
-         *
-         * - 'twas > it was;
-         * - 'tis > it is;
-         * - 'twere > it were.
-         */
-
-        'twas|tis|twere|' +
-
-        /*
-         * Matches groups of year, optionally followed
-         * by an `s`.
-         */
-
-        '\\d\\ds?' +
-    ')$'
+    /* Matches groups of year, optionally followed
+     * by an `s`. */
+    '\\d\\ds?' +
+  ')$'
 );
 
 /* Match one apostrophe. */
 var EXPRESSION_APOSTROPHE = /^['\u2019]$/;
 
-/**
- * Merge a sentence into its next sentence,
- * when the sentence ends with a certain word.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next index.
- */
+/* Merge a sentence into its next sentence,
+ * when the sentence ends with a certain word. */
 function mergeEnglishPrefixExceptions(child, index, parent) {
-    var children = child.children;
-    var prev;
-    var node;
-    var prevValue;
-    var next;
+  var children = child.children;
+  var prev;
+  var node;
+  var prevValue;
+  var next;
+
+  if (
+    children &&
+    children.length !== 0 &&
+    index !== parent.children.length - 1
+  ) {
+    prev = children[children.length - 2];
+    node = children[children.length - 1];
 
     if (
-        children &&
-        children.length &&
-        index !== parent.children.length - 1
+      node &&
+      prev &&
+      prev.type === 'WordNode' &&
+      nlcstToString(node) === '.'
     ) {
-        prev = children[children.length - 2];
-        node = children[children.length - 1];
+      prevValue = nlcstToString(prev);
 
-        if (
-            node &&
-            prev &&
-            prev.type === 'WordNode' &&
-            nlcstToString(node) === '.'
-        ) {
-            prevValue = nlcstToString(prev);
+      if (
+        EXPRESSION_ABBREVIATION_ENGLISH_PREFIX_SENSITIVE.test(prevValue) ||
+        EXPRESSION_ABBREVIATION_ENGLISH_PREFIX.test(prevValue.toLowerCase())
+      ) {
+        next = parent.children[index + 1];
 
-            if (
-                EXPRESSION_ABBREVIATION_ENGLISH_PREFIX_SENSITIVE.test(
-                    prevValue
-                ) ||
-                EXPRESSION_ABBREVIATION_ENGLISH_PREFIX.test(
-                    prevValue.toLowerCase()
-                )
-            ) {
-                next = parent.children[index + 1];
+        child.children = children.concat(next.children);
 
-                child.children = children.concat(next.children);
-
-                /* Update position. */
-                if (child.position && next.position) {
-                    child.position.end = next.position.end;
-                }
-
-                parent.children.splice(index + 1, 1);
-
-                return index - 1;
-            }
+        /* Update position. */
+        if (child.position && next.position) {
+          child.position.end = next.position.end;
         }
+
+        parent.children.splice(index + 1, 1);
+
+        return index - 1;
+      }
     }
+  }
 }
 
-/**
- * Merge an apostrophe depicting elision into
- * its surrounding word.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- */
+/* Merge an apostrophe depicting elision into
+ * its surrounding word. */
 function mergeEnglishElisionExceptions(child, index, parent) {
-    var siblings;
-    var length;
-    var value;
-    var node;
-    var other;
+  var siblings;
+  var length;
+  var value;
+  var node;
+  var other;
+
+  if (child.type !== 'PunctuationNode' && child.type !== 'SymbolNode') {
+    return;
+  }
+
+  siblings = parent.children;
+  length = siblings.length;
+  value = nlcstToString(child);
+
+  /* Match abbreviation of `with`, `w/` */
+  if (value === '/') {
+    node = siblings[index - 1];
+
+    if (node && nlcstToString(node).toLowerCase() === 'w') {
+      /* Remove the slash from parent. */
+      siblings.splice(index, 1);
+
+      /* Append the slash into the children of the
+       * previous node. */
+      node.children.push(child);
+
+      /* Update position. */
+      if (node.position && child.position) {
+        node.position.end = child.position.end;
+      }
+    }
+  } else if (EXPRESSION_APOSTROPHE.test(value)) {
+    /* If two preceding (the first white space and the
+     * second a word), and one following (white space)
+     * nodes exist... */
+    node = siblings[index - 1];
 
     if (
-        child.type !== 'PunctuationNode' &&
-        child.type !== 'SymbolNode'
+      index > 2 &&
+      index < length - 1 &&
+      node.type === 'WordNode' &&
+      siblings[index - 2].type === 'WhiteSpaceNode' &&
+      siblings[index + 1].type === 'WhiteSpaceNode' &&
+      EXPRESSION_ELISION_ENGLISH_PREFIX.test(
+        nlcstToString(node).toLowerCase()
+      )
     ) {
-        return;
+      /* Remove the apostrophe from parent. */
+      siblings.splice(index, 1);
+
+      /* Append the apostrophe into the children of
+       * node. */
+      node.children.push(child);
+
+      /* Update position. */
+      if (node.position && child.position) {
+        node.position.end = child.position.end;
+      }
+
+      return;
     }
 
-    siblings = parent.children;
+    /* If a following word exists, and the preceding node
+     * is not a word... */
+    if (
+      index !== length - 1 &&
+      siblings[index + 1].type === 'WordNode' &&
+      (
+        index === 0 ||
+        siblings[index - 1].type !== 'WordNode'
+      )
+    ) {
+      node = siblings[index + 1];
+      value = nlcstToString(node).toLowerCase();
 
-    length = siblings.length;
+      if (EXPRESSION_ELISION_ENGLISH_AFFIX.test(value)) {
+        /* Remove the apostrophe from parent. */
+        siblings.splice(index, 1);
 
-    value = nlcstToString(child);
+        /* Prepend the apostrophe into the children of
+         * node. */
+        node.children = [child].concat(node.children);
 
-    /* Match abbreviation of `with`, `w/` */
-    if (value === '/') {
-        node = siblings[index - 1];
-
-        if (node && nlcstToString(node).toLowerCase() === 'w') {
-            /* Remove the slash from parent. */
-            siblings.splice(index, 1);
-
-            /* Append the slash into the children of the
-             * previous node. */
-            node.children.push(child);
-
-            /* Update position. */
-            if (node.position && child.position) {
-                node.position.end = child.position.end;
-            }
+        /* Update position. */
+        if (node.position && child.position) {
+          node.position.start = child.position.start;
         }
-    } else if (EXPRESSION_APOSTROPHE.test(value)) {
-        /* If two preceding (the first white space and the
-         * second a word), and one following (white space)
-         * nodes exist... */
-        node = siblings[index - 1];
+      /* If both preceded and followed by an apostrophe,
+       * and the word is `n`... */
+      } else if (
+        value === 'n' &&
+        index < length - 2 &&
+        EXPRESSION_APOSTROPHE.test(nlcstToString(siblings[index + 2]))
+      ) {
+        other = siblings[index + 2];
 
-        if (
-            index > 2 &&
-            index < length - 1 &&
-            node.type === 'WordNode' &&
-            siblings[index - 2].type === 'WhiteSpaceNode' &&
-            siblings[index + 1].type === 'WhiteSpaceNode' &&
-            EXPRESSION_ELISION_ENGLISH_PREFIX.test(
-                nlcstToString(node).toLowerCase()
-            )
-        ) {
-            /* Remove the apostrophe from parent. */
-            siblings.splice(index, 1);
+        /* Remove the apostrophe from parent. */
+        siblings.splice(index, 1);
+        siblings.splice(index + 1, 1);
 
-            /* Append the apostrophe into the children of
-             * node. */
-            node.children.push(child);
+        /* Prepend the preceding apostrophe and append
+         * the into the following apostrophe into
+         * the children of node. */
+        node.children = [child].concat(node.children, other);
 
-            /* Update position. */
-            if (node.position && child.position) {
-                node.position.end = child.position.end;
-            }
+        /* Update position. */
+        if (node.position) {
+          /* istanbul ignore else */
+          if (child.position) {
+            node.position.start = child.position.start;
+          }
 
-            return;
+          /* istanbul ignore else */
+          if (other.position) {
+            node.position.end = other.position.end;
+          }
         }
-
-        /* If a following word exists, and the preceding node
-         * is not a word... */
-        if (
-            index !== length - 1 &&
-            siblings[index + 1].type === 'WordNode' &&
-            (
-                index === 0 ||
-                siblings[index - 1].type !== 'WordNode'
-            )
-        ) {
-            node = siblings[index + 1];
-            value = nlcstToString(node).toLowerCase();
-
-            if (EXPRESSION_ELISION_ENGLISH_AFFIX.test(value)) {
-                /* Remove the apostrophe from parent. */
-                siblings.splice(index, 1);
-
-                /* Prepend the apostrophe into the children of
-                 * node. */
-                node.children = [child].concat(node.children);
-
-                /* Update position. */
-                if (node.position && child.position) {
-                    node.position.start = child.position.start;
-                }
-
-            /* If both preceded and followed by an apostrophe,
-             * and the word is `n`... */
-            } else if (
-                value === 'n' &&
-                index < length - 2 &&
-                EXPRESSION_APOSTROPHE.test(
-                    nlcstToString(siblings[index + 2])
-                )
-            ) {
-                other = siblings[index + 2];
-
-                /* Remove the apostrophe from parent. */
-                siblings.splice(index, 1);
-                siblings.splice(index + 1, 1);
-
-                /* Prepend the preceding apostrophe and append
-                 * the into the following apostrophe into
-                 * the children of node. */
-                node.children = [child].concat(node.children, other);
-
-                /* Update position. */
-                if (node.position) {
-                    /* istanbul ignore else */
-                    if (child.position) {
-                        node.position.start = child.position.start;
-                    }
-
-                    /* istanbul ignore else */
-                    if (other.position) {
-                        node.position.end = other.position.end;
-                    }
-                }
-            }
-        }
+      }
     }
+  }
 }
 
-/**
- * Transform English natural language into an NLCST-tree.
- *
- * @param {VFile} file - Virtual file.
- * @param {Object?} [options] - Configuration.
- * @constructor {ParseEnglish}
- */
-function ParseEnglish(file, options) {
-    if (!(this instanceof ParseEnglish)) {
-        return new ParseEnglish(file, options);
-    }
-
-    Parser.apply(this, arguments);
-}
-
-/* Inherit from `ParseLatin`. */
-var parserPrototype;
-
-/**
- * Constructor to create a `ParseEnglish` prototype.
- */
-function ParserPrototype() {}
-
-ParserPrototype.prototype = Parser.prototype;
-
-parserPrototype = new ParserPrototype();
-
-ParseEnglish.prototype = parserPrototype;
-
-/* Add modifiers to `parser`. */
-parserPrototype.tokenizeSentencePlugins =
-    [visitChildren(mergeEnglishElisionExceptions)].concat(
-        parserPrototype.tokenizeSentencePlugins
-    );
-
-parserPrototype.tokenizeParagraphPlugins =
-    [modifyChildren(mergeEnglishPrefixExceptions)].concat(
-        parserPrototype.tokenizeParagraphPlugins
-    );
-
-/* Expose `ParseEnglish`. */
-module.exports = ParseEnglish;
-
-},{"nlcst-to-string":22,"parse-latin":25,"unist-util-modify-children":53,"unist-util-visit-children":55}],25:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014 Titus Wormer
- * @license MIT
- * @module parse-latin
- * @fileoverview Latin-script (natural language) parser.
- */
-
+},{"nlcst-to-string":22,"parse-latin":24,"unist-util-modify-children":53,"unist-util-visit-children":55}],24:[function(require,module,exports){
 'use strict';
-
-/* Expose. */
 module.exports = require('./lib/index.js');
 
-},{"./lib/index.js":27}],26:[function(require,module,exports){
+},{"./lib/index.js":26}],25:[function(require,module,exports){
 /* This module is generated by `script/build-expressions.js` */
 'use strict';
 
@@ -1782,15 +1334,7 @@ module.exports = {
   whiteSpace: /[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]/
 };
 
-},{}],27:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin
- * @fileoverview Latin-script (natural language) parser.
- */
-
+},{}],26:[function(require,module,exports){
 'use strict';
 
 /* Dependencies. */
@@ -1802,32 +1346,16 @@ module.exports = ParseLatin;
 
 /* == PARSE LATIN ================================================== */
 
-/**
- * Transform Latin-script natural language into
- * an NLCST-tree.
- *
- * @param {VFile?} file - Virtual file.
- * @param {Object?} options - Configuration.
- * @constructor {ParseLatin}
- */
-function ParseLatin(file, options) {
-  var position;
+/* Transform Latin-script natural language into
+ * an NLCST-tree. */
+function ParseLatin(doc, file) {
+  var value = file || doc;
 
   if (!(this instanceof ParseLatin)) {
-    return new ParseLatin(file, options);
+    return new ParseLatin(doc, file);
   }
 
-  if (file && file.message) {
-    this.file = file;
-  } else {
-    options = file;
-  }
-
-  position = options && options.position;
-
-  if (position !== null && position !== undefined) {
-    this.position = Boolean(position);
-  }
+  this.doc = value ? String(value) : null;
 }
 
 /* Quick access to the prototype. */
@@ -1846,53 +1374,27 @@ proto.tokenizeText = createTextFactory('Text');
 /* Expose `run`. */
 proto.run = run;
 
-/*
- * Inject `plugins` to modifiy the result of the method
- * at `key` on the operated on context.
- *
- * @param {string} key
- * @param {Function|Array.<Function>} plugins
- * @this {ParseLatin|Object}
- */
-
+/* Inject `plugins` to modifiy the result of the method
+ * at `key` on the operated on context. */
 proto.use = useFactory(function (context, key, plugins) {
   context[key] = context[key].concat(plugins);
 });
 
-/*
- * Inject `plugins` to modifiy the result of the method
- * at `key` on the operated on context, before any other.
- *
- * @param {string} key
- * @param {Function|Array.<Function>} plugins
- * @this {ParseLatin|Object}
- */
-
+/* Inject `plugins` to modifiy the result of the method
+ * at `key` on the operated on context, before any other. */
 proto.useFirst = useFactory(function (context, key, plugins) {
   context[key] = plugins.concat(context[key]);
 });
 
-/**
- * Easy access to the document parser. This additionally
+/* Easy access to the document parser. This additionally
  * supports retext-style invocation: where an instance is
  * created for each file, and the file is given on
- * instanciation.
- *
- * @see ParseLatin#tokenizeRoot
- * @param {string?} value - Value to parse.
- * @return {NLCSTWordNode} - Word node.
- */
+ * construction. */
 proto.parse = function (value) {
-  return this.tokenizeRoot(this.file ? this.file.toString() : value);
+  return this.tokenizeRoot(value || this.doc);
 };
 
-/**
- * Transform a `value` into a list of `NLCSTNode`s.
- *
- * @see tokenize
- * @param {string?} value - Value to tokenize.
- * @return {Array.<NLCSTNode>} - Nodes.
- */
+/* Transform a `value` into a list of `NLCSTNode`s. */
 proto.tokenize = function (value) {
   return tokenize(this, value);
 };
@@ -1910,15 +1412,8 @@ proto.tokenize = function (value) {
  * symbols) to `tokenizeRoot` (an NLCST tree), is also
  * implemented through this mechanism. */
 
-/**
- * Create a `WordNode` with its children set to a single
- * `TextNode`, its value set to the given `value`.
- *
- * @see pluggable
- * @param {string?} value - Value to classify as a word.
- * @param {Function} eat - Eater.
- * @return {NLCSTWordNode} - Word node.
- */
+/* Create a `WordNode` with its children set to a single
+ * `TextNode`, its value set to the given `value`. */
 pluggable(ParseLatin, 'tokenizeWord', function (value, eat) {
   var add = (eat || noopEat)('');
   var parent = {type: 'WordNode', children: []};
@@ -1928,38 +1423,24 @@ pluggable(ParseLatin, 'tokenizeWord', function (value, eat) {
   return add(parent);
 });
 
-/**
- * Create a `SentenceNode` with its children set to
+/* Create a `SentenceNode` with its children set to
  * `Node`s, their values set to the tokenized given
  * `value`.
  *
  * Unless plugins add new nodes, the sentence is
  * populated by `WordNode`s, `SymbolNode`s,
- * `PunctuationNode`s, and `WhiteSpaceNode`s.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTSentenceNode}
- */
+ * `PunctuationNode`s, and `WhiteSpaceNode`s. */
 pluggable(ParseLatin, 'tokenizeSentence', createParser({
   type: 'SentenceNode',
   tokenizer: 'tokenize'
 }));
 
-/**
- * Create a `ParagraphNode` with its children set to
+/* Create a `ParagraphNode` with its children set to
  * `Node`s, their values set to the tokenized given
  * `value`.
  *
  * Unless plugins add new nodes, the paragraph is
- * populated by `SentenceNode`s and `WhiteSpaceNode`s.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTParagraphNode}
- */
+ * populated by `SentenceNode`s and `WhiteSpaceNode`s. */
 pluggable(ParseLatin, 'tokenizeParagraph', createParser({
   type: 'ParagraphNode',
   delimiter: expressions.terminalMarker,
@@ -1967,18 +1448,8 @@ pluggable(ParseLatin, 'tokenizeParagraph', createParser({
   tokenizer: 'tokenizeSentence'
 }));
 
-/**
- * Create a `RootNode` with its children set to `Node`s,
- * their values set to the tokenized given `value`.
- *
- * Unless plugins add new nodes, the root is populated by
- * `ParagraphNode`s and `WhiteSpaceNode`s.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTRootNode}
- */
+/* Create a `RootNode` with its children set to `Node`s,
+ * their values set to the tokenized given `value`. */
 pluggable(ParseLatin, 'tokenizeRoot', createParser({
   type: 'RootNode',
   delimiter: expressions.newLine,
@@ -2021,27 +1492,13 @@ proto.use('tokenizeRoot', [
 
 /* == TEXT NODES =================================================== */
 
-/**
- * Factory to create a `Text`.
- *
- * @param {string} type - Name of text node.
- * @return {Function} - Text creator.
- */
+/* Factory to create a `Text`. */
 function createTextFactory(type) {
   type += 'Node';
 
   return createText;
 
-  /**
-   * Construct a `Text` from a bound `type`
-   *
-   * @param {value} value - Value of the node.
-   * @param {Function?} [eat] - Optional eat mechanism
-   *   to use.
-   * @param {NLCSTParentNode?} [parent] - Optional
-   *   parent to insert into.
-   * @return {NLCSTText} - Text node.
-   */
+  /* Construct a `Text` from a bound `type` */
   function createText(value, eat, parent) {
     if (value === null || value === undefined) {
       value = '';
@@ -2054,13 +1511,7 @@ function createTextFactory(type) {
   }
 }
 
-/**
- * Run transform plug-ins for `key` on `nodes`.
- *
- * @param {string} key - Unique name.
- * @param {Array.<Node>} nodes - List of nodes.
- * @return {Array.<Node>} - `nodes`.
- */
+/* Run transform plug-ins for `key` on `nodes`. */
 function run(key, nodes) {
   var wareKey = key + 'Plugins';
   var plugins = this[wareKey];
@@ -2075,39 +1526,22 @@ function run(key, nodes) {
   return nodes;
 }
 
-/**
- * @param {Function} Constructor - Context.
- * @param {string} key - Unique name.
- * @param {function(*): undefined} callback - Wrapped.
- */
+/* Make a method “pluggable”. */
 function pluggable(Constructor, key, callback) {
-  /**
-   * Set a pluggable version of `callback`
-   * on `Constructor`.
-   */
+  /* Set a pluggable version of `callback`
+   * on `Constructor`. */
   Constructor.prototype[key] = function () {
     return this.run(key, callback.apply(this, arguments));
   };
 }
 
-/**
- * Factory to inject `plugins`. Takes `callback` for
- * the actual inserting.
- *
- * @param {function(Object, string, Array.<Function>)} callback - Wrapped.
- * @return {Function} - Use.
- */
+/* Factory to inject `plugins`. Takes `callback` for
+ * the actual inserting. */
 function useFactory(callback) {
   return use;
 
-  /**
-   * Validate if `plugins` can be inserted. Invokes
-   * the bound `callback` to do the actual inserting.
-   *
-   * @param {string} key - Method to inject on
-   * @param {Array.<Function>|Function} plugins - One
-   *   or more plugins.
-   */
+  /* Validate if `plugins` can be inserted. Invokes
+   * the bound `callback` to do the actual inserting. */
   function use(key, plugins) {
     var self = this;
     var wareKey;
@@ -2148,24 +1582,18 @@ function useFactory(callback) {
 /* == CLASSIFY ===================================================== */
 
 /* Match a word character. */
-var EXPRESSION_WORD = expressions.word;
+var WORD = expressions.word;
 
 /* Match a surrogate character. */
-var EXPRESSION_SURROGATES = expressions.surrogates;
+var SURROGATES = expressions.surrogates;
 
 /* Match a punctuation character. */
-var EXPRESSION_PUNCTUATION = expressions.punctuation;
+var PUNCTUATION = expressions.punctuation;
 
 /* Match a white space character. */
-var EXPRESSION_WHITE_SPACE = expressions.whiteSpace;
+var WHITE_SPACE = expressions.whiteSpace;
 
-/**
- * Transform a `value` into a list of `NLCSTNode`s.
- *
- * @param {ParseLatin} parser - Context.
- * @param {string?} value - Value to tokenize.
- * @return {Array.<NLCSTNode>} - Nodes.
- */
+/* Transform a `value` into a list of `NLCSTNode`s. */
 function tokenize(parser, value) {
   var tokens;
   var offset;
@@ -2187,12 +1615,9 @@ function tokenize(parser, value) {
   }
 
   if (typeof value !== 'string') {
-    /**
-     * Return the given nodes if this is either an
+    /* Return the given nodes if this is either an
      * empty array, or an array with a node as a first
-     * child.
-     */
-
+     * child. */
     if ('length' in value && (!value[0] || value[0].type)) {
       return value;
     }
@@ -2222,11 +1647,11 @@ function tokenize(parser, value) {
   while (index < length) {
     character = value.charAt(index);
 
-    if (EXPRESSION_WHITE_SPACE.test(character)) {
+    if (WHITE_SPACE.test(character)) {
       right = 'WhiteSpace';
-    } else if (EXPRESSION_PUNCTUATION.test(character)) {
+    } else if (PUNCTUATION.test(character)) {
       right = 'Punctuation';
-    } else if (EXPRESSION_WORD.test(character)) {
+    } else if (WORD.test(character)) {
       right = 'Word';
     } else {
       right = 'Symbol';
@@ -2246,9 +1671,7 @@ function tokenize(parser, value) {
 
   return tokens;
 
-  /**
-   * Check one character.
-   */
+  /* Check one character. */
   function tick() {
     if (
       left === right &&
@@ -2256,7 +1679,7 @@ function tokenize(parser, value) {
         left === 'Word' ||
         left === 'WhiteSpace' ||
         character === prev ||
-        EXPRESSION_SURROGATES.test(character)
+        SURROGATES.test(character)
       )
     ) {
       queue += character;
@@ -2270,19 +1693,9 @@ function tokenize(parser, value) {
     }
   }
 
-  /**
-   * Remove `subvalue` from `value`.
+  /* Remove `subvalue` from `value`.
    * Expects `subvalue` to be at the start from
-   * `value`, and applies no validation.
-   *
-   * @example
-   *   eat('foo')({type: 'TextNode', value: 'foo'});
-   *
-   * @param {string} subvalue - Removed from `value`,
-   *   and passed to `update`.
-   * @return {Function} - Wrapper around `add`, which
-   *   also adds `position` to node.
-   */
+   * `value`, and applies no validation. */
   function eat(subvalue) {
     var pos = position();
 
@@ -2290,44 +1703,25 @@ function tokenize(parser, value) {
 
     return apply;
 
-    /**
-     * Add the given arguments, add `position` to
-     * the returned node, and return the node.
-     *
-     * @return {Node} - Patched node.
-     */
+    /* Add the given arguments, add `position` to
+     * the returned node, and return the node. */
     function apply() {
       return pos(add.apply(null, arguments));
     }
   }
 
-  /**
-   * Remove `subvalue` from `value`. Does not patch
-   * positional information.
-   *
-   * @return {Function} - Apply.
-   */
+  /* Remove `subvalue` from `value`. Does not patch
+   * positional information. */
   function noPositionEat() {
     return apply;
 
-    /**
-     * Add the given arguments and return the node.
-     *
-     * @return {Node} - Given node.
-     */
+    /* Add the given arguments and return the node. */
     function apply() {
       return add.apply(null, arguments);
     }
   }
 
-  /**
-   * Add mechanism.
-   *
-   * @param {NLCSTNode} node - Node to add.
-   * @param {NLCSTParentNode?} [parent] - Optional parent
-   *   node to insert into.
-   * @return {NLCSTNode} - `node`.
-   */
+  /* Add mechanism. */
   function add(node, parent) {
     if (parent) {
       parent.children.push(node);
@@ -2338,35 +1732,11 @@ function tokenize(parser, value) {
     return node;
   }
 
-  /**
-   * Mark position and patch `node.position`.
-   *
-   * @example
-   *   var update = position();
-   *   updatePosition('foo');
-   *   update({});
-   *   // {
-   *   //   position: {
-   *   //     start: {line: 1, column: 1}
-   *   //     end: {line: 1, column: 3}
-   *   //   }
-   *   // }
-   *
-   * @returns {function(Node): Node} - Patched node.
-   */
+  /* Mark position and patch `node.position`. */
   function position() {
     var before = now();
 
-    /**
-     * Add the position to a node.
-     *
-     * @example
-     *   update({type: 'text', value: 'foo'});
-     *
-     * @param {Node} node - Node to attach position
-     *   on.
-     * @return {Node} - `node`.
-     */
+    /* Add the position to a node. */
     function patch(node) {
       node.position = new Position(before);
 
@@ -2376,14 +1746,7 @@ function tokenize(parser, value) {
     return patch;
   }
 
-  /**
-   * Update line and column based on `value`.
-   *
-   * @example
-   *   update('foo');
-   *
-   * @param {string} subvalue - Eaten value..
-   */
+  /* Update line and column based on `value`. */
   function update(subvalue) {
     var subvalueLength = subvalue.length;
     var character = -1;
@@ -2405,30 +1768,13 @@ function tokenize(parser, value) {
     }
   }
 
-  /**
-   * Store position information for a node.
-   *
-   * @example
-   *   start = now();
-   *   updatePosition('foo');
-   *   location = new Position(start);
-   *   // {start: {line: 1, column: 1}, end: {line: 1, column: 3}}
-   *
-   * @param {Object} start - Starting position.
-   */
+  /* Store position information for a node. */
   function Position(start) {
     this.start = start;
     this.end = now();
   }
 
-  /**
-   * Get the current position.
-   *
-   * @example
-   *   position = now(); // {line: 1, column: 1}
-   *
-   * @return {Object} - Current position.
-   */
+  /* Get the current position. */
   function now() {
     return {
       line: line,
@@ -2438,15 +1784,8 @@ function tokenize(parser, value) {
   }
 }
 
-/**
- * Add mechanism used when text-tokenisers are called
- * directly outside of the `tokenize` function.
- *
- * @param {NLCSTNode} node - Node to add.
- * @param {NLCSTParentNode?} [parent] - Optional parent
- *   node to insert into.
- * @return {NLCSTNode} - `node`.
- */
+/* Add mechanism used when text-tokenisers are called
+ * directly outside of the `tokenize` function. */
 function noopAdd(node, parent) {
   if (parent) {
     parent.children.push(node);
@@ -2455,26 +1794,14 @@ function noopAdd(node, parent) {
   return node;
 }
 
-/**
- * Eat and add mechanism without adding positional
+/* Eat and add mechanism without adding positional
  * information, used when text-tokenisers are called
- * directly outside of the `tokenize` function.
- *
- * @return {Function} - Add.
- */
+ * directly outside of the `tokenize` function. */
 function noopEat() {
   return noopAdd;
 }
 
-},{"./expressions":26,"./parser":28,"./plugin/break-implicit-sentences":29,"./plugin/make-final-white-space-siblings":30,"./plugin/make-initial-white-space-siblings":31,"./plugin/merge-affix-exceptions":32,"./plugin/merge-affix-symbol":33,"./plugin/merge-final-word-symbol":34,"./plugin/merge-initial-lower-case-letter-sentences":35,"./plugin/merge-initial-word-symbol":36,"./plugin/merge-initialisms":37,"./plugin/merge-inner-word-slash":38,"./plugin/merge-inner-word-symbol":39,"./plugin/merge-non-word-sentences":40,"./plugin/merge-prefix-exceptions":41,"./plugin/merge-remaining-full-stops":42,"./plugin/merge-words":43,"./plugin/patch-position":44,"./plugin/remove-empty-nodes":45}],28:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:parser
- * @fileoverview Construct a parser for a given node.
- */
-
+},{"./expressions":25,"./parser":27,"./plugin/break-implicit-sentences":28,"./plugin/make-final-white-space-siblings":29,"./plugin/make-initial-white-space-siblings":30,"./plugin/merge-affix-exceptions":31,"./plugin/merge-affix-symbol":32,"./plugin/merge-final-word-symbol":33,"./plugin/merge-initial-lower-case-letter-sentences":34,"./plugin/merge-initial-word-symbol":35,"./plugin/merge-initialisms":36,"./plugin/merge-inner-word-slash":37,"./plugin/merge-inner-word-symbol":38,"./plugin/merge-non-word-sentences":39,"./plugin/merge-prefix-exceptions":40,"./plugin/merge-remaining-full-stops":41,"./plugin/merge-words":42,"./plugin/patch-position":43,"./plugin/remove-empty-nodes":44}],27:[function(require,module,exports){
 'use strict';
 
 /* Dependencies. */
@@ -2483,12 +1810,7 @@ var tokenizer = require('./tokenizer');
 /* Expose. */
 module.exports = parserFactory;
 
-/**
- * Construct a parser based on `options`.
- *
- * @param {Object} options - Configuration.
- * @return {function(string): NLCSTNode} - Parser.
- */
+/* Construct a parser based on `options`. */
 function parserFactory(options) {
   var type = options.type;
   var tokenizerProperty = options.tokenizer;
@@ -2507,37 +1829,20 @@ function parserFactory(options) {
   }
 }
 
-},{"./tokenizer":46}],29:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:break-implicit-sentencs
- * @fileoverview Break a sentence if a white space with
- *   more than one new-line is found.
- */
-
+},{"./tokenizer":45}],28:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 var expressions = require('../expressions');
 
-/* Expose. */
 module.exports = modifyChildren(breakImplicitSentences);
 
 /* Two or more new line characters. */
-var EXPRESSION_MULTI_NEW_LINE = expressions.newLineMulti;
+var MULTI_NEW_LINE = expressions.newLineMulti;
 
-/**
- * Break a sentence if a white space with more
- * than one new-line is found.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- */
+/* Break a sentence if a white space with more
+ * than one new-line is found. */
 function breakImplicitSentences(child, index, parent) {
   var children;
   var position;
@@ -2563,7 +1868,7 @@ function breakImplicitSentences(child, index, parent) {
 
     if (
       node.type !== 'WhiteSpaceNode' ||
-      !EXPRESSION_MULTI_NEW_LINE.test(nlcstToString(node))
+      !MULTI_NEW_LINE.test(toString(node))
     ) {
       continue;
     }
@@ -2595,32 +1900,15 @@ function breakImplicitSentences(child, index, parent) {
   }
 }
 
-},{"../expressions":26,"nlcst-to-string":22,"unist-util-modify-children":53}],30:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:make-final-white-space-siblings
- * @fileoverview Make final white-space siblings.
- */
-
+},{"../expressions":25,"nlcst-to-string":22,"unist-util-modify-children":53}],29:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(makeFinalWhiteSpaceSiblings);
 
-/**
- * Move white space ending a paragraph up, so they are
- * the siblings of paragraphs.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParent} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Move white space ending a paragraph up, so they are
+ * the siblings of paragraphs. */
 function makeFinalWhiteSpaceSiblings(child, index, parent) {
   var children = child.children;
   var prev;
@@ -2642,40 +1930,20 @@ function makeFinalWhiteSpaceSiblings(child, index, parent) {
   }
 }
 
-},{"unist-util-modify-children":53}],31:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:make-initial-white-space-siblings
- * @fileoverview Make initial white-space siblings.
- */
-
+},{"unist-util-modify-children":53}],30:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var visitChildren = require('unist-util-visit-children');
 
-/* Expose. */
 module.exports = visitChildren(makeInitialWhiteSpaceSiblings);
 
-/**
- * Move white space starting a sentence up, so they are
- * the siblings of sentences.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParent} parent - Parent of `child`.
- */
+/* Move white space starting a sentence up, so they are
+ * the siblings of sentences. */
 function makeInitialWhiteSpaceSiblings(child, index, parent) {
   var children = child.children;
   var next;
 
-  if (
-    children &&
-    children.length !== 0 &&
-    children[0].type === 'WhiteSpaceNode'
-  ) {
+  if (children && children.length !== 0 && children[0].type === 'WhiteSpaceNode') {
     parent.children.splice(index, 0, children.shift());
     next = children[0];
 
@@ -2685,34 +1953,18 @@ function makeInitialWhiteSpaceSiblings(child, index, parent) {
   }
 }
 
-},{"unist-util-visit-children":55}],32:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-affix-exceptions
- * @fileoverview Merge a sentence into its previous
- *   sentence, when the sentence starts with a comma.
- */
-
+},{"unist-util-visit-children":55}],31:[function(require,module,exports){
 'use strict';
 
 /* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 
 /* Expose. */
 module.exports = modifyChildren(mergeAffixExceptions);
 
-/**
- * Merge a sentence into its previous sentence, when
- * the sentence starts with a comma.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge a sentence into its previous sentence, when
+ * the sentence starts with a comma. */
 function mergeAffixExceptions(child, index, parent) {
   var children = child.children;
   var node;
@@ -2720,7 +1972,7 @@ function mergeAffixExceptions(child, index, parent) {
   var value;
   var previousChild;
 
-  if (!children || !children.length || index === 0) {
+  if (!children || children.length === 0 || index === 0) {
     return;
   }
 
@@ -2733,11 +1985,8 @@ function mergeAffixExceptions(child, index, parent) {
       return;
     }
 
-    if (
-      node.type === 'SymbolNode' ||
-      node.type === 'PunctuationNode'
-    ) {
-      value = nlcstToString(node);
+    if (node.type === 'SymbolNode' || node.type === 'PunctuationNode') {
+      value = toString(node);
 
       if (value !== ',' && value !== ';') {
         return;
@@ -2761,64 +2010,38 @@ function mergeAffixExceptions(child, index, parent) {
   }
 }
 
-},{"nlcst-to-string":22,"unist-util-modify-children":53}],33:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-affix-symbol
- * @fileoverview Move certain punctuation following a
- *   terminal marker (thus in the next sentence) to the
- *   previous sentence.
- */
-
+},{"nlcst-to-string":22,"unist-util-modify-children":53}],32:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 var expressions = require('../expressions');
 
-/* Expose. */
 module.exports = modifyChildren(mergeAffixSymbol);
 
 /* Closing or final punctuation, or terminal markers
  * that should still be included in the previous
  * sentence, even though they follow the sentence's
  * terminal marker. */
-var EXPRESSION_AFFIX_SYMBOL = expressions.affixSymbol;
+var AFFIX_SYMBOL = expressions.affixSymbol;
 
-/**
- * Move certain punctuation following a terminal
+/* Move certain punctuation following a terminal
  * marker (thus in the next sentence) to the
- * previous sentence.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+ * previous sentence. */
 function mergeAffixSymbol(child, index, parent) {
   var children = child.children;
   var first;
   var second;
   var prev;
 
-  if (
-    children &&
-    children.length &&
-    index !== 0
-  ) {
+  if (children && children.length !== 0 && index !== 0) {
     first = children[0];
     second = children[1];
     prev = parent.children[index - 1];
 
     if (
-      (
-        first.type === 'SymbolNode' ||
-        first.type === 'PunctuationNode'
-      ) &&
-      EXPRESSION_AFFIX_SYMBOL.test(nlcstToString(first))
+      (first.type === 'SymbolNode' || first.type === 'PunctuationNode') &&
+      AFFIX_SYMBOL.test(toString(first))
     ) {
       prev.children.push(children.shift());
 
@@ -2837,33 +2060,16 @@ function mergeAffixSymbol(child, index, parent) {
   }
 }
 
-},{"../expressions":26,"nlcst-to-string":22,"unist-util-modify-children":53}],34:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-final-word-symbol
- * @fileoverview Merge certain symbols into their preceding word.
- */
-
+},{"../expressions":25,"nlcst-to-string":22,"unist-util-modify-children":53}],33:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(mergeFinalWordSymbol);
 
-/**
- * Merge certain punctuation marks into their
- * preceding words.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge certain punctuation marks into their
+ * preceding words. */
 function mergeFinalWordSymbol(child, index, parent) {
   var children;
   var prev;
@@ -2871,11 +2077,8 @@ function mergeFinalWordSymbol(child, index, parent) {
 
   if (
     index !== 0 &&
-    (
-      child.type === 'SymbolNode' ||
-      child.type === 'PunctuationNode'
-    ) &&
-    nlcstToString(child) === '-'
+    (child.type === 'SymbolNode' || child.type === 'PunctuationNode') &&
+    toString(child) === '-'
   ) {
     children = parent.children;
 
@@ -2883,14 +2086,8 @@ function mergeFinalWordSymbol(child, index, parent) {
     next = children[index + 1];
 
     if (
-      (
-        !next ||
-        next.type !== 'WordNode'
-      ) &&
-      (
-        prev &&
-        prev.type === 'WordNode'
-      )
+      (!next || next.type !== 'WordNode') &&
+      (prev && prev.type === 'WordNode')
     ) {
       /* Remove `child` from parent. */
       children.splice(index, 1);
@@ -2911,39 +2108,20 @@ function mergeFinalWordSymbol(child, index, parent) {
   }
 }
 
-},{"nlcst-to-string":22,"unist-util-modify-children":53}],35:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-initial-lower-case-letter-sentences
- * @fileoverview Merge a sentence into its previous
- *   sentence, when the sentence starts with a lower case
- *   letter.
- */
-
+},{"nlcst-to-string":22,"unist-util-modify-children":53}],34:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 var expressions = require('../expressions');
 
-/* Expose. */
 module.exports = modifyChildren(mergeInitialLowerCaseLetterSentences);
 
 /* Initial lowercase letter. */
-var EXPRESSION_LOWER_INITIAL = expressions.lowerInitial;
+var LOWER_INITIAL = expressions.lowerInitial;
 
-/**
- * Merge a sentence into its previous sentence, when
- * the sentence starts with a lower case letter.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge a sentence into its previous sentence, when
+ * the sentence starts with a lower case letter. */
 function mergeInitialLowerCaseLetterSentences(child, index, parent) {
   var children = child.children;
   var position;
@@ -2951,18 +2129,14 @@ function mergeInitialLowerCaseLetterSentences(child, index, parent) {
   var siblings;
   var prev;
 
-  if (
-    children &&
-    children.length &&
-    index !== 0
-  ) {
+  if (children && children.length !== 0 && index !== 0) {
     position = -1;
 
     while (children[++position]) {
       node = children[position];
 
       if (node.type === 'WordNode') {
-        if (!EXPRESSION_LOWER_INITIAL.test(nlcstToString(node))) {
+        if (!LOWER_INITIAL.test(toString(node))) {
           return;
         }
 
@@ -2984,53 +2158,30 @@ function mergeInitialLowerCaseLetterSentences(child, index, parent) {
         return index;
       }
 
-      if (
-        node.type === 'SymbolNode' ||
-        node.type === 'PunctuationNode'
-      ) {
+      if (node.type === 'SymbolNode' || node.type === 'PunctuationNode') {
         return;
       }
     }
   }
 }
 
-},{"../expressions":26,"nlcst-to-string":22,"unist-util-modify-children":53}],36:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-initial-word-symbol
- * @fileoverview Merge certain symbols into their next word.
- */
-
+},{"../expressions":25,"nlcst-to-string":22,"unist-util-modify-children":53}],35:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(mergeInitialWordSymbol);
 
-/**
- * Merge certain punctuation marks into their
- * following words.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge certain punctuation marks into their
+ * following words. */
 function mergeInitialWordSymbol(child, index, parent) {
   var children;
   var next;
 
   if (
-    (
-      child.type !== 'SymbolNode' &&
-      child.type !== 'PunctuationNode'
-    ) ||
-    nlcstToString(child) !== '&'
+    (child.type !== 'SymbolNode' && child.type !== 'PunctuationNode') ||
+    toString(child) !== '&'
   ) {
     return;
   }
@@ -3042,14 +2193,8 @@ function mergeInitialWordSymbol(child, index, parent) {
   /* If either a previous word, or no following word,
    * exists, exit early. */
   if (
-    (
-      index !== 0 &&
-      children[index - 1].type === 'WordNode'
-    ) ||
-    !(
-      next &&
-      next.type === 'WordNode'
-    )
+    (index !== 0 && children[index - 1].type === 'WordNode') ||
+    !(next && next.type === 'WordNode')
   ) {
     return;
   }
@@ -3072,36 +2217,18 @@ function mergeInitialWordSymbol(child, index, parent) {
   return index - 1;
 }
 
-},{"nlcst-to-string":22,"unist-util-modify-children":53}],37:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-initialisms
- * @fileoverview Merge initialisms.
- */
-
+},{"nlcst-to-string":22,"unist-util-modify-children":53}],36:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 var expressions = require('../expressions');
 
-/* Expose. */
 module.exports = modifyChildren(mergeInitialisms);
 
-/* Numbers. */
-var EXPRESSION_NUMERICAL = expressions.numerical;
+var NUMERICAL = expressions.numerical;
 
-/**
- * Merge initialisms.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge initialisms. */
 function mergeInitialisms(child, index, parent) {
   var siblings;
   var prev;
@@ -3112,10 +2239,7 @@ function mergeInitialisms(child, index, parent) {
   var isAllDigits;
   var value;
 
-  if (
-    index !== 0 &&
-    nlcstToString(child) === '.'
-  ) {
+  if (index !== 0 && toString(child) === '.') {
     siblings = parent.children;
 
     prev = siblings[index - 1];
@@ -3135,7 +2259,7 @@ function mergeInitialisms(child, index, parent) {
       while (children[--position]) {
         otherChild = children[position];
 
-        value = nlcstToString(otherChild);
+        value = toString(otherChild);
 
         if (position % 2 === 0) {
           /* Initialisms consist of one
@@ -3144,7 +2268,7 @@ function mergeInitialisms(child, index, parent) {
             return;
           }
 
-          if (!EXPRESSION_NUMERICAL.test(value)) {
+          if (!NUMERICAL.test(value)) {
             isAllDigits = false;
           }
         } else if (value !== '.') {
@@ -3176,36 +2300,18 @@ function mergeInitialisms(child, index, parent) {
   }
 }
 
-},{"../expressions":26,"nlcst-to-string":22,"unist-util-modify-children":53}],38:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-inner-word-symbol
- * @fileoverview Merge words joined by certain punctuation
- *   marks.
- */
-
+},{"../expressions":25,"nlcst-to-string":22,"unist-util-modify-children":53}],37:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(mergeInnerWordSlash);
 
 /* Constants. */
 var C_SLASH = '/';
 
-/**
- * Merge words joined by certain punctuation marks.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge words joined by certain punctuation marks. */
 function mergeInnerWordSlash(child, index, parent) {
   var siblings = parent.children;
   var prev;
@@ -3222,19 +2328,16 @@ function mergeInnerWordSlash(child, index, parent) {
   if (
     prev &&
     prev.type === 'WordNode' &&
-    (
-      child.type === 'SymbolNode' ||
-      child.type === 'PunctuationNode'
-    ) &&
-    nlcstToString(child) === C_SLASH
+    (child.type === 'SymbolNode' || child.type === 'PunctuationNode') &&
+    toString(child) === C_SLASH
   ) {
-    prevValue = nlcstToString(prev);
+    prevValue = toString(prev);
     tail = child;
     queue = [child];
     count = 1;
 
     if (next && next.type === 'WordNode') {
-      nextValue = nlcstToString(next);
+      nextValue = toString(next);
       tail = next;
       queue = queue.concat(next.children);
       count++;
@@ -3261,37 +2364,19 @@ function mergeInnerWordSlash(child, index, parent) {
   }
 }
 
-},{"nlcst-to-string":22,"unist-util-modify-children":53}],39:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-inner-word-symbol
- * @fileoverview Merge words joined by certain punctuation
- *   marks.
- */
-
+},{"nlcst-to-string":22,"unist-util-modify-children":53}],38:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 var expressions = require('../expressions');
 
-/* Expose. */
 module.exports = modifyChildren(mergeInnerWordSymbol);
 
 /* Symbols part of surrounding words. */
-var EXPRESSION_INNER_WORD_SYMBOL = expressions.wordSymbolInner;
+var INNER_WORD_SYMBOL = expressions.wordSymbolInner;
 
-/**
- * Merge words joined by certain punctuation marks.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge words joined by certain punctuation marks. */
 function mergeInnerWordSymbol(child, index, parent) {
   var siblings;
   var sibling;
@@ -3301,15 +2386,8 @@ function mergeInnerWordSymbol(child, index, parent) {
   var tokens;
   var queue;
 
-  if (
-    index !== 0 &&
-    (
-      child.type === 'SymbolNode' ||
-      child.type === 'PunctuationNode'
-    )
-  ) {
+  if (index !== 0 && (child.type === 'SymbolNode' || child.type === 'PunctuationNode')) {
     siblings = parent.children;
-
     prev = siblings[index - 1];
 
     if (prev && prev.type === 'WordNode') {
@@ -3337,7 +2415,7 @@ function mergeInnerWordSymbol(child, index, parent) {
             sibling.type === 'SymbolNode' ||
             sibling.type === 'PunctuationNode'
           ) &&
-          EXPRESSION_INNER_WORD_SYMBOL.test(nlcstToString(sibling))
+          INNER_WORD_SYMBOL.test(toString(sibling))
         ) {
           queue.push(sibling);
         } else {
@@ -3345,10 +2423,10 @@ function mergeInnerWordSymbol(child, index, parent) {
         }
       }
 
-      if (tokens.length) {
+      if (tokens.length !== 0) {
         /* If there is a queue, remove its length
          * from `position`. */
-        if (queue.length) {
+        if (queue.length !== 0) {
           position -= queue.length;
         }
 
@@ -3374,34 +2452,15 @@ function mergeInnerWordSymbol(child, index, parent) {
   }
 }
 
-},{"../expressions":26,"nlcst-to-string":22,"unist-util-modify-children":53}],40:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-non-word-sentences
- * @fileoverview Merge a sentence into the following
- *   sentence, when the sentence does not contain word
- *   tokens.
- */
-
+},{"../expressions":25,"nlcst-to-string":22,"unist-util-modify-children":53}],39:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(mergeNonWordSentences);
 
-/**
- * Merge a sentence into the following sentence, when
- * the sentence does not contain word tokens.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge a sentence into the following sentence, when
+ * the sentence does not contain word tokens. */
 function mergeNonWordSentences(child, index, parent) {
   var children = child.children;
   var position = -1;
@@ -3448,29 +2507,18 @@ function mergeNonWordSentences(child, index, parent) {
   }
 }
 
-},{"unist-util-modify-children":53}],41:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-prefix-exceptions
- * @fileoverview Merge a sentence into its next sentence,
- *   when the sentence ends with a certain word.
- */
-
+},{"unist-util-modify-children":53}],40:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(mergePrefixExceptions);
 
 /* Blacklist of full stop characters that should not
  * be treated as terminal sentence markers: A case-insensitive
  * abbreviation. */
-var EXPRESSION_ABBREVIATION_PREFIX = new RegExp(
+var ABBREVIATION_PREFIX = new RegExp(
   '^(' +
     '[0-9]+|' +
     '[a-z]|' +
@@ -3489,15 +2537,8 @@ var EXPRESSION_ABBREVIATION_PREFIX = new RegExp(
   ')$'
 );
 
-/**
- * Merge a sentence into its next sentence, when the
- * sentence ends with a certain word.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Merge a sentence into its next sentence, when the
+ * sentence ends with a certain word. */
 function mergePrefixExceptions(child, index, parent) {
   var children = child.children;
   var node;
@@ -3505,22 +2546,19 @@ function mergePrefixExceptions(child, index, parent) {
 
   if (
     children &&
-    children.length &&
+    children.length !== 0 &&
     index !== parent.children.length - 1
   ) {
     node = children[children.length - 1];
 
-    if (
-      node &&
-      nlcstToString(node) === '.'
-    ) {
+    if (node && toString(node) === '.') {
       node = children[children.length - 2];
 
       if (
         node &&
         node.type === 'WordNode' &&
-        EXPRESSION_ABBREVIATION_PREFIX.test(
-          nlcstToString(node).toLowerCase()
+        ABBREVIATION_PREFIX.test(
+          toString(node).toLowerCase()
         )
       ) {
         next = parent.children[index + 1];
@@ -3541,38 +2579,23 @@ function mergePrefixExceptions(child, index, parent) {
   }
 }
 
-},{"nlcst-to-string":22,"unist-util-modify-children":53}],42:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-remaining-full-stops
- * @fileoverview Merge non-terminal-marker full stops into
- *   previous or next adjacent words.
- */
-
+},{"nlcst-to-string":22,"unist-util-modify-children":53}],41:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 var visitChildren = require('unist-util-visit-children');
 var expressions = require('../expressions');
 
-/* Expose. */
 module.exports = visitChildren(mergeRemainingFullStops);
 
 /* Blacklist of full stop characters that should not
  * be treated as terminal sentence markers: A
  * case-insensitive abbreviation. */
-var EXPRESSION_TERMINAL_MARKER = expressions.terminalMarker;
+var TERMINAL_MARKER = expressions.terminalMarker;
 
-/**
- * Merge non-terminal-marker full stops into
+/* Merge non-terminal-marker full stops into
  * the previous word (if available), or the next
- * word (if available).
- *
- * @param {NLCSTNode} child - Node.
- */
+ * word (if available). */
 function mergeRemainingFullStops(child) {
   var children = child.children;
   var position = children.length;
@@ -3585,10 +2608,7 @@ function mergeRemainingFullStops(child) {
   while (children[--position]) {
     grandchild = children[position];
 
-    if (
-      grandchild.type !== 'SymbolNode' &&
-      grandchild.type !== 'PunctuationNode'
-    ) {
+    if (grandchild.type !== 'SymbolNode' && grandchild.type !== 'PunctuationNode') {
       /* This is a sentence without terminal marker,
        * so we 'fool' the code to make it think we
        * have found one. */
@@ -3600,7 +2620,7 @@ function mergeRemainingFullStops(child) {
     }
 
     /* Exit when this token is not a terminal marker. */
-    if (!EXPRESSION_TERMINAL_MARKER.test(nlcstToString(grandchild))) {
+    if (!TERMINAL_MARKER.test(toString(grandchild))) {
       continue;
     }
 
@@ -3614,7 +2634,7 @@ function mergeRemainingFullStops(child) {
     }
 
     /* Only merge a single full stop. */
-    if (nlcstToString(grandchild) !== '.') {
+    if (toString(grandchild) !== '.') {
       continue;
     }
 
@@ -3631,7 +2651,7 @@ function mergeRemainingFullStops(child) {
         next &&
         nextNext &&
         next.type === 'WhiteSpaceNode' &&
-        nlcstToString(nextNext) === '.'
+        toString(nextNext) === '.'
       ) {
         continue;
       }
@@ -3664,34 +2684,17 @@ function mergeRemainingFullStops(child) {
   }
 }
 
-},{"../expressions":26,"nlcst-to-string":22,"unist-util-visit-children":55}],43:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:merge-words
- * @fileoverview Merge adjacent words.
- */
-
+},{"../expressions":25,"nlcst-to-string":22,"unist-util-visit-children":55}],42:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(mergeFinalWordSymbol);
 
-/**
- * Merge multiple words. This merges the children of
+/* Merge multiple words. This merges the children of
  * adjacent words, something which should not occur
  * naturally by parse-latin, but might happen when
- * custom tokens were passed in.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTSentenceNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+ * custom tokens were passed in. */
 function mergeFinalWordSymbol(child, index, parent) {
   var siblings = parent.children;
   var next;
@@ -3718,32 +2721,15 @@ function mergeFinalWordSymbol(child, index, parent) {
   }
 }
 
-},{"unist-util-modify-children":53}],44:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:patch-position
- * @fileoverview Patch `position` on a parent node based
- *   on its first and last child.
- */
-
+},{"unist-util-modify-children":53}],43:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var visitChildren = require('unist-util-visit-children');
 
-/* Expose. */
 module.exports = visitChildren(patchPosition);
 
-/**
- * Patch the position on a parent node based on its first
- * and last child.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `node`.
- * @param {NLCSTNode} node - Parent of `child`.
- */
+/* Patch the position on a parent node based on its first
+ * and last child. */
 function patchPosition(child, index, node) {
   var siblings = node.children;
 
@@ -3751,10 +2737,7 @@ function patchPosition(child, index, node) {
     return;
   }
 
-  if (
-    index === 0 &&
-    (!node.position || /* istanbul ignore next */ !node.position.start)
-  ) {
+  if (index === 0 && (!node.position || /* istanbul ignore next */ !node.position.start)) {
     patch(node);
     node.position.start = child.position.start;
   }
@@ -3768,45 +2751,24 @@ function patchPosition(child, index, node) {
   }
 }
 
-/**
- * Add a `position` object when it does not yet exist
- * on `node`.
- *
- * @param {NLCSTNode} node - Node to patch.
- */
+/* Add a `position` object when it does not yet exist
+ * on `node`. */
 function patch(node) {
   if (!node.position) {
     node.position = {};
   }
 }
 
-},{"unist-util-visit-children":55}],45:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:plugin:remove-empty-nodes
- * @fileoverview Remove empty child nodes without children.
- */
-
+},{"unist-util-visit-children":55}],44:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var modifyChildren = require('unist-util-modify-children');
 
-/* Expose. */
 module.exports = modifyChildren(removeEmptyNodes);
 
-/**
- * Remove empty children.
- *
- * @param {NLCSTNode} child - Node.
- * @param {number} index - Position of `child` in `parent`.
- * @param {NLCSTParagraphNode} parent - Parent of `child`.
- * @return {number?} - Next position.
- */
+/* Remove empty children. */
 function removeEmptyNodes(child, index, parent) {
-  if ('children' in child && !child.children.length) {
+  if ('children' in child && child.children.length === 0) {
     parent.children.splice(index, 1);
 
     /* Next, iterate over the node *now* at
@@ -3816,43 +2778,21 @@ function removeEmptyNodes(child, index, parent) {
   }
 }
 
-},{"unist-util-modify-children":53}],46:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module parse-latin:tokenizer
- * @fileoverview Tokenize tokens matching an expression as
- *   a given node-type.
- */
-
+},{"unist-util-modify-children":53}],45:[function(require,module,exports){
 'use strict';
 
 /* Dependencies. */
-var nlcstToString = require('nlcst-to-string');
+var toString = require('nlcst-to-string');
 
 /* Expose. */
 module.exports = tokenizerFactory;
 
-/**
- * Factory to create a tokenizer based on a given
- * `expression`.
- *
- * @param {string} childType - Type of child to tokenize
- *   as.
- * @param {RegExp} expression - Expression to use for
- *   tokenization.
- * @return {Function} - Tokenizer.
- */
+/* Factory to create a tokenizer based on a given
+ * `expression`. */
 function tokenizerFactory(childType, expression) {
   return tokenizer;
 
-  /**
-   * A function which splits
-   *
-   * @param {NLCSTParent} node - Parent node.
-   * @return {Array.<NLCSTChild>} - Nodes.
-   */
+  /* A function that splits. */
   function tokenizer(node) {
     var children = [];
     var tokens = node.children;
@@ -3870,7 +2810,7 @@ function tokenizerFactory(childType, expression) {
         index === lastIndex ||
         (
           tokens[index].type === childType &&
-          expression.test(nlcstToString(tokens[index]))
+          expression.test(toString(tokens[index]))
         )
       ) {
         first = tokens[start];
@@ -3898,7 +2838,7 @@ function tokenizerFactory(childType, expression) {
   }
 }
 
-},{"nlcst-to-string":22}],47:[function(require,module,exports){
+},{"nlcst-to-string":22}],46:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4126,7 +3066,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":6}],48:[function(require,module,exports){
+},{"_process":6}],47:[function(require,module,exports){
 'use strict';
 
 var path = require('path');
@@ -4146,37 +3086,20 @@ function replaceExt(npath, ext) {
 
 module.exports = replaceExt;
 
-},{"path":47}],49:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014 Titus Wormer
- * @license MIT
- * @module retext:english
- * @fileoverview retext parser for the English language.
- */
-
+},{"path":46}],48:[function(require,module,exports){
 'use strict';
 
-/* eslint-env commonjs */
-
-/* Dependencies. */
 var unherit = require('unherit');
 var English = require('parse-english');
 
-/**
- * Attacher.
- *
- * @param {unified} processor - Unified processor.
- */
-function parse(processor) {
-    processor.Parser = unherit(English);
+module.exports = parse;
+parse.Parser = English;
+
+function parse() {
+  this.Parser = unherit(English);
 }
 
-/* Expose. */
-parse.Parser = English;
-module.exports = parse;
-
-},{"parse-english":24,"unherit":51}],50:[function(require,module,exports){
+},{"parse-english":23,"unherit":50}],49:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2016 Titus Wormer
@@ -4354,7 +3277,7 @@ function wrap(fn, next) {
   }
 }
 
-},{}],51:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -4423,116 +3346,80 @@ function unherit(Super) {
   }
 }
 
-},{"inherits":19,"xtend":87}],52:[function(require,module,exports){
-(function (global){
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module unified
- * @fileoverview Pluggable text processing interface.
- */
-
+},{"inherits":18,"xtend":87}],51:[function(require,module,exports){
 'use strict';
 
 /* Dependencies. */
-var events = require('events');
 var has = require('has');
-var once = require('once');
 var extend = require('extend');
 var bail = require('bail');
 var vfile = require('vfile');
 var trough = require('trough');
-var buffer = require('is-buffer');
 var string = require('x-is-string');
+var func = require('x-is-function');
+var array = require('isarray');
+var plain = require('is-plain-obj');
 
-/* Expose an abstract processor. */
-module.exports = unified().abstract();
+/* Expose a frozen processor. */
+module.exports = unified().freeze();
 
-/* Methods. */
 var slice = [].slice;
 
 /* Process pipeline. */
-var pipeline = trough()
-  .use(function (p, ctx) {
-    ctx.tree = p.parse(ctx.file, ctx.options);
-  })
-  .use(function (p, ctx, next) {
-    p.run(ctx.tree, ctx.file, function (err, tree, file) {
-      if (err) {
-        next(err);
-      } else {
-        ctx.tree = tree;
-        ctx.file = file;
-        next();
-      }
-    });
-  })
-  .use(function (p, ctx) {
-    ctx.file.contents = p.stringify(ctx.tree, ctx.file, ctx.options);
-  });
+var pipeline = trough().use(pipelineParse).use(pipelineRun).use(pipelineStringify);
 
-/**
- * Function to create the first processor.
- *
- * @return {Function} - First processor.
- */
+function pipelineParse(p, ctx) {
+  ctx.tree = p.parse(ctx.file);
+}
+
+function pipelineRun(p, ctx, next) {
+  p.run(ctx.tree, ctx.file, done);
+
+  function done(err, tree, file) {
+    if (err) {
+      next(err);
+    } else {
+      ctx.tree = tree;
+      ctx.file = file;
+      next();
+    }
+  }
+}
+
+function pipelineStringify(p, ctx) {
+  ctx.file.contents = p.stringify(ctx.tree, ctx.file);
+}
+
+/* Function to create the first processor. */
 function unified() {
   var attachers = [];
   var transformers = trough();
   var namespace = {};
-  var chunks = [];
-  var emitter = new events.EventEmitter();
-  var ended = false;
-  var concrete = true;
-  var settings;
-  var key;
-
-  /* Mix in methods. */
-  for (key in emitter) {
-    processor[key] = emitter[key];
-  }
-
-  /* Throw as early as possible.
-   * As events are triggered synchroneously, the stack
-   * is preserved. */
-  processor.on('pipe', function () {
-    assertConcrete();
-  });
+  var frozen = false;
 
   /* Data management. */
   processor.data = data;
 
   /* Lock. */
-  processor.abstract = abstract;
+  processor.freeze = freeze;
 
   /* Plug-ins. */
   processor.attachers = attachers;
   processor.use = use;
 
-  /* Streaming. */
-  processor.writable = true;
-  processor.readable = true;
-  processor.write = write;
-  processor.end = end;
-  processor.pipe = pipe;
-
   /* API. */
   processor.parse = parse;
   processor.stringify = stringify;
   processor.run = run;
+  processor.runSync = runSync;
   processor.process = process;
+  processor.processSync = processSync;
 
   /* Expose. */
   return processor;
 
-  /**
-   * Create a new processor based on the processor
-   * in the current scope.
-   *
-   * @return {Processor} - New concrete processor based
-   *   on the descendant processor.
-   */
+  /* Create a new processor based on the processor
+   * in the current scope. */
   function processor() {
     var destination = unified();
     var length = attachers.length;
@@ -4547,113 +3434,60 @@ function unified() {
     return destination;
   }
 
-  /* Helpers. */
-
-  /**
-   * Assert a parser is available.
+  /* Freeze: used to signal a processor that has finished
+   * configuration.
    *
-   * @param {string} name - Name of callee.
-   */
-  function assertParser(name) {
-    if (!isParser(processor.Parser)) {
-      throw new Error('Cannot `' + name + '` without `Parser`');
-    }
-  }
-
-  /**
-   * Assert a compiler is available.
-   *
-   * @param {string} name - Name of callee.
-   */
-  function assertCompiler(name) {
-    if (!isCompiler(processor.Compiler)) {
-      throw new Error('Cannot `' + name + '` without `Compiler`');
-    }
-  }
-
-  /**
-   * Assert the processor is concrete.
-   *
-   * @param {string} name - Name of callee.
-   */
-  function assertConcrete(name) {
-    if (!concrete) {
-      throw new Error(
-        'Cannot ' +
-        (name ? 'invoke `' + name + '` on' : 'pipe into') +
-        ' abstract processor.\n' +
-        'To make the processor concrete, invoke it: ' +
-        'use `processor()` instead of `processor`.'
-      );
-    }
-  }
-
-  /**
-   * Assert `node` is a Unist node.
-   *
-   * @param {*} node - Value to check.
-   */
-  function assertNode(node) {
-    if (!isNode(node)) {
-      throw new Error('Expected node, got `' + node + '`');
-    }
-  }
-
-  /**
-   * Assert, if no `done` is given, that `complete` is
-   * `true`.
-   *
-   * @param {string} name - Name of callee.
-   * @param {boolean} complete - Whether an async process
-   *   is complete.
-   * @param {Function?} done - Optional handler of async
-   *   results.
-   */
-  function assertDone(name, complete, done) {
-    if (!complete && !done) {
-      throw new Error(
-        'Expected `done` to be given to `' + name + '` ' +
-        'as async plug-ins are used'
-      );
-    }
-  }
-
-  /**
-   * Abstract: used to signal an abstract processor which
-   * should made concrete before using.
-   *
-   * For example, take unified itself.  It’s abstract.
+   * For example, take unified itself.  It’s frozen.
    * Plug-ins should not be added to it.  Rather, it should
-   * be made concrete (by invoking it) before modifying it.
+   * be extended, by invoking it, before modifying it.
    *
    * In essence, always invoke this when exporting a
-   * processor.
-   *
-   * @return {Processor} - The operated on processor.
-   */
-  function abstract() {
-    concrete = false;
+   * processor. */
+  function freeze() {
+    var index = -1;
+    var values;
+    var plugin;
+    var options;
+    var transformer;
+
+    if (frozen) {
+      return processor;
+    }
+
+    while (++index < attachers.length) {
+      values = attachers[index];
+      plugin = values[0];
+      options = values[1];
+      transformer = null;
+
+      if (options === false) {
+        return;
+      }
+
+      if (options === true) {
+        values[1] = undefined;
+      }
+
+      transformer = plugin.apply(processor, values.slice(1));
+
+      if (func(transformer)) {
+        transformers.use(transformer);
+      }
+    }
+
+    frozen = true;
 
     return processor;
   }
 
-  /**
-   * Data management.
-   *
-   * Getter / setter for processor-specific informtion.
-   *
-   * @param {string} key - Key to get or set.
-   * @param {*} value - Value to set.
-   * @return {*} - Either the operator on processor in
-   *   setter mode; or the value stored as `key` in
-   *   getter mode.
-   */
+  /* Data management.
+   * Getter / setter for processor-specific informtion. */
   function data(key, value) {
-    assertConcrete('data');
-
     if (string(key)) {
       /* Set `key`. */
       if (arguments.length === 2) {
+        assertUnfrozen('data', frozen);
+
         namespace[key] = value;
 
         return processor;
@@ -4663,438 +3497,325 @@ function unified() {
       return (has(namespace, key) && namespace[key]) || null;
     }
 
-    /* Get space. */
-    if (!key) {
-      return namespace;
-    }
-
     /* Set space. */
-    namespace = key;
-
-    return processor;
-  }
-
-  /**
-   * Plug-in management.
-   *
-   * Pass it:
-   * *   an attacher and options,
-   * *   a list of attachers and options for all of them;
-   * *   a tuple of one attacher and options.
-   * *   a matrix: list containing any of the above and
-   *     matrices.
-   * *   a processor: another processor to use all its
-   *     plugins (except parser if there’s already one).
-   *
-   * @param {...*} value - See description.
-   * @return {Processor} - The operated on processor.
-   */
-  function use(value) {
-    var args = slice.call(arguments, 0);
-    var params = args.slice(1);
-    var parser;
-    var index;
-    var length;
-    var transformer;
-    var result;
-
-    assertConcrete('use');
-
-    /* Multiple attachers. */
-    if ('length' in value && !isFunction(value)) {
-      index = -1;
-      length = value.length;
-
-      if (!isFunction(value[0])) {
-        /* Matrix of things. */
-        while (++index < length) {
-          use(value[index]);
-        }
-      } else if (isFunction(value[1])) {
-        /* List of things. */
-        while (++index < length) {
-          use.apply(null, [value[index]].concat(params));
-        }
-      } else {
-        /* Arguments. */
-        use.apply(null, value);
-      }
-
+    if (key) {
+      assertUnfrozen('data', frozen);
+      namespace = key;
       return processor;
     }
 
-    /* Store attacher. */
-    attachers.push(args);
+    /* Get space. */
+    return namespace;
+  }
 
-    /* Use a processor (except its parser if there’s already one.
-     * Note that the processor is stored on `attachers`, making
-     * it possibly mutating in the future, but also ensuring
-     * the parser isn’t overwritten in the future either. */
-    if (isProcessor(value)) {
-      parser = processor.Parser;
-      result = use(value.attachers);
+  /* Plug-in management.
+   *
+   * Pass it:
+   * *   an attacher and options,
+   * *   a preset,
+   * *   a list of presets, attachers, and arguments (list
+   *     of attachers and options). */
+  function use(value) {
+    var settings;
 
-      if (parser) {
-        processor.Parser = parser;
+    assertUnfrozen('use', frozen);
+
+    if (value === null || value === undefined) {
+      /* empty */
+    } else if (func(value)) {
+      addPlugin.apply(null, arguments);
+    } else if (typeof value === 'object') {
+      if ('length' in value) {
+        addList(value);
+      } else {
+        addPreset(value);
       }
-
-      return result;
+    } else {
+      throw new Error('Expected usable value, not `' + value + '`');
     }
 
-    /* Single attacher. */
-    transformer = value.apply(null, [processor].concat(params));
-
-    if (isFunction(transformer)) {
-      transformers.use(transformer);
+    if (settings) {
+      namespace.settings = extend(namespace.settings || {}, settings);
     }
 
     return processor;
+
+    function addPreset(result) {
+      addList(result.plugins);
+
+      if (result.settings) {
+        settings = extend(settings || {}, result.settings);
+      }
+    }
+
+    function add(value) {
+      if (func(value)) {
+        addPlugin(value);
+      } else if (typeof value === 'object') {
+        if ('length' in value) {
+          addPlugin.apply(null, value);
+        } else {
+          addPreset(value);
+        }
+      } else {
+        throw new Error('Expected usable value, not `' + value + '`');
+      }
+    }
+
+    function addList(plugins) {
+      var length;
+      var index;
+
+      if (plugins === null || plugins === undefined) {
+        /* empty */
+      } else if (array(plugins)) {
+        length = plugins.length;
+        index = -1;
+
+        while (++index < length) {
+          add(plugins[index]);
+        }
+      } else {
+        throw new Error('Expected a list of plugins, not `' + plugins + '`');
+      }
+    }
+
+    function addPlugin(plugin, value) {
+      var entry = find(plugin);
+
+      if (entry) {
+        if (plain(entry[1]) && plain(value)) {
+          value = extend(entry[1], value);
+        }
+
+        entry[1] = value;
+      } else {
+        attachers.push(slice.call(arguments));
+      }
+    }
   }
 
-  /**
-   * Parse a file (in string or VFile representation)
+  function find(plugin) {
+    var length = attachers.length;
+    var index = -1;
+    var entry;
+
+    while (++index < length) {
+      entry = attachers[index];
+
+      if (entry[0] === plugin) {
+        return entry;
+      }
+    }
+  }
+
+  /* Parse a file (in string or VFile representation)
    * into a Unist node using the `Parser` on the
-   * processor.
-   *
-   * @param {VFile?} [file] - File to process.
-   * @param {Object?} [options] - Configuration.
-   * @return {Node} - Unist node.
-   */
-  function parse(file, options) {
-    assertConcrete('parse');
-    assertParser('parse');
+   * processor. */
+  function parse(doc) {
+    var file = vfile(doc);
+    var Parser;
 
-    return new processor.Parser(vfile(file), options, processor).parse();
+    freeze();
+    Parser = processor.Parser;
+    assertParser('parse', Parser);
+
+    if (newable(Parser)) {
+      return new Parser(String(file), file).parse();
+    }
+
+    return Parser(String(file), file); // eslint-disable-line new-cap
   }
 
-  /**
-   * Run transforms on a Unist node representation of a file
-   * (in string or VFile representation).
-   *
-   * @param {Node} node - Unist node.
-   * @param {(string|VFile)?} [file] - File representation.
-   * @param {Function?} [done] - Callback.
-   * @return {Node} - The given or resulting Unist node.
-   */
-  function run(node, file, done) {
+  /* Run transforms on a Unist node representation of a file
+   * (in string or VFile representation), async. */
+  function run(node, file, cb) {
+    assertNode(node);
+    freeze();
+
+    if (!cb && func(file)) {
+      cb = file;
+      file = null;
+    }
+
+    if (!cb) {
+      return new Promise(executor);
+    }
+
+    executor(null, cb);
+
+    function executor(resolve, reject) {
+      transformers.run(node, vfile(file), done);
+
+      function done(err, tree, file) {
+        tree = tree || node;
+        if (err) {
+          reject(err);
+        } else if (resolve) {
+          resolve(tree);
+        } else {
+          cb(null, tree, file);
+        }
+      }
+    }
+  }
+
+  /* Run transforms on a Unist node representation of a file
+   * (in string or VFile representation), sync. */
+  function runSync(node, file) {
     var complete = false;
     var result;
 
-    assertConcrete('run');
-    assertNode(node);
+    run(node, file, done);
 
-    result = node;
-
-    if (!done && isFunction(file)) {
-      done = file;
-      file = null;
-    }
-
-    transformers.run(node, vfile(file), function (err, tree, file) {
-      complete = true;
-      result = tree || node;
-
-      (done || bail)(err, tree, file);
-    });
-
-    assertDone('run', complete, done);
+    assertDone('runSync', 'run', complete);
 
     return result;
+
+    function done(err, tree) {
+      complete = true;
+      bail(err);
+      result = tree;
+    }
   }
 
-  /**
-   * Stringify a Unist node representation of a file
+  /* Stringify a Unist node representation of a file
    * (in string or VFile representation) into a string
-   * using the `Compiler` on the processor.
-   *
-   * @param {Node} node - Unist node.
-   * @param {(string|VFile)?} [file] - File representation.
-   * @param {Object?} [options] - Configuration.
-   * @return {string} - String representation.
-   */
-  function stringify(node, file, options) {
-    assertConcrete('stringify');
-    assertCompiler('stringify');
+   * using the `Compiler` on the processor. */
+  function stringify(node, doc) {
+    var file = vfile(doc);
+    var Compiler;
+
+    freeze();
+    Compiler = processor.Compiler;
+    assertCompiler('stringify', Compiler);
     assertNode(node);
 
-    if (
-      !options &&
-      !string(file) &&
-      !buffer(file) &&
-      !(typeof file === 'object' && 'messages' in file)
-    ) {
-      options = file;
-      file = null;
+    if (newable(Compiler)) {
+      return new Compiler(node, file).compile();
     }
 
-    return new processor.Compiler(vfile(file), options, processor).compile(node);
+    return Compiler(node, file); // eslint-disable-line new-cap
   }
 
-  /**
-   * Parse a file (in string or VFile representation)
+  /* Parse a file (in string or VFile representation)
    * into a Unist node using the `Parser` on the processor,
    * then run transforms on that node, and compile the
    * resulting node using the `Compiler` on the processor,
-   * and store that result on the VFile.
-   *
-   * @param {(string|VFile)?} file - File representation.
-   * @param {Object?} [options] - Configuration.
-   * @param {Function?} [done] - Callback.
-   * @return {VFile} - The given or resulting VFile.
-   */
-  function process(file, options, done) {
-    var complete = false;
+   * and store that result on the VFile. */
+  function process(doc, cb) {
+    freeze();
+    assertParser('process', processor.Parser);
+    assertCompiler('process', processor.Compiler);
 
-    assertConcrete('process');
-    assertParser('process');
-    assertCompiler('process');
-
-    if (!done && isFunction(options)) {
-      done = options;
-      options = null;
+    if (!cb) {
+      return new Promise(executor);
     }
 
-    file = vfile(file);
+    executor(null, cb);
 
-    pipeline.run(processor, {
-      file: file,
-      options: options || {}
-    }, function (err) {
-      complete = true;
+    function executor(resolve, reject) {
+      var file = vfile(doc);
 
-      if (done) {
-        done(err, file);
-      } else {
-        bail(err);
-      }
-    });
+      pipeline.run(processor, {file: file}, done);
 
-    assertDone('process', complete, done);
-
-    return file;
-  }
-
-  /* Streams. */
-
-  /**
-   * Write a chunk into memory.
-   *
-   * @param {(Buffer|string)?} chunk - Value to write.
-   * @param {string?} [encoding] - Encoding.
-   * @param {Function?} [callback] - Callback.
-   * @return {boolean} - Whether the write was succesful.
-   */
-  function write(chunk, encoding, callback) {
-    assertConcrete('write');
-
-    if (isFunction(encoding)) {
-      callback = encoding;
-      encoding = null;
-    }
-
-    if (ended) {
-      throw new Error('Did not expect `write` after `end`');
-    }
-
-    chunks.push((chunk || '').toString(encoding || 'utf8'));
-
-    if (callback) {
-      callback();
-    }
-
-    /* Signal succesful write. */
-    return true;
-  }
-
-  /**
-   * End the writing.  Passes all arguments to a final
-   * `write`.  Starts the process, which will trigger
-   * `error`, with a fatal error, if any; `data`, with
-   * the generated document in `string` form, if
-   * succesful.  If messages are triggered during the
-   * process, those are triggerd as `warning`s.
-   *
-   * @return {boolean} - Whether the last write was
-   *   succesful.
-   */
-  function end() {
-    assertConcrete('end');
-    assertParser('end');
-    assertCompiler('end');
-
-    write.apply(null, arguments);
-
-    ended = true;
-
-    process(chunks.join(''), settings, function (err, file) {
-      var messages = file.messages;
-      var length = messages.length;
-      var index = -1;
-
-      chunks = settings = null;
-
-      /* Trigger messages as warnings, except for fatal error. */
-      while (++index < length) {
-        if (messages[index] !== err) {
-          processor.emit('warning', messages[index]);
+      function done(err) {
+        if (err) {
+          reject(err);
+        } else if (resolve) {
+          resolve(file);
+        } else {
+          cb(null, file);
         }
       }
+    }
+  }
 
-      if (err) {
-        /* Don’t enter an infinite error throwing loop. */
-        global.setTimeout(function () {
-          processor.emit('error', err);
-        }, 4);
-      } else {
-        processor.emit('data', file.contents);
-        processor.emit('end');
-      }
-    });
+  /* Process the given document (in string or VFile
+   * representation), sync. */
+  function processSync(doc) {
+    var complete = false;
+    var file;
 
+    freeze();
+    assertParser('processSync', processor.Parser);
+    assertCompiler('processSync', processor.Compiler);
+    file = vfile(doc);
+
+    process(file, done);
+
+    assertDone('processSync', 'process', complete);
+
+    return file;
+
+    function done(err) {
+      complete = true;
+      bail(err);
+    }
+  }
+}
+
+/* Check if `func` is a constructor. */
+function newable(value) {
+  return func(value) && keys(value.prototype);
+}
+
+/* Check if `value` is an object with keys. */
+function keys(value) {
+  var key;
+  for (key in value) {
     return true;
   }
+  return false;
+}
 
-  /**
-   * Pipe the processor into a writable stream.
-   *
-   * Basically `Stream#pipe`, but inlined and
-   * simplified to keep the bundled size down.
-   *
-   * @see https://github.com/nodejs/node/blob/master/lib/stream.js#L26
-   *
-   * @param {Stream} dest - Writable stream.
-   * @param {Object?} [options] - Processing
-   *   configuration.
-   * @return {Stream} - The destination stream.
-   */
-  function pipe(dest, options) {
-    var onend = once(onended);
-
-    assertConcrete('pipe');
-
-    settings = options || {};
-
-    processor.on('data', ondata);
-    processor.on('error', onerror);
-    processor.on('end', cleanup);
-    processor.on('close', cleanup);
-
-    /* If the 'end' option is not supplied, dest.end() will be
-     * called when the 'end' or 'close' events are received.
-     * Only dest.end() once. */
-    if (!dest._isStdio && settings.end !== false) {
-      processor.on('end', onend);
-    }
-
-    dest.on('error', onerror);
-    dest.on('close', cleanup);
-
-    dest.emit('pipe', processor);
-
-    return dest;
-
-    /** End destination. */
-    function onended() {
-      if (dest.end) {
-        dest.end();
-      }
-    }
-
-    /**
-     * Handle data.
-     *
-     * @param {*} chunk - Data to pass through.
-     */
-    function ondata(chunk) {
-      if (dest.writable) {
-        dest.write(chunk);
-      }
-    }
-
-    /**
-     * Clean listeners.
-     */
-    function cleanup() {
-      processor.removeListener('data', ondata);
-      processor.removeListener('end', onend);
-      processor.removeListener('error', onerror);
-      processor.removeListener('end', cleanup);
-      processor.removeListener('close', cleanup);
-
-      dest.removeListener('error', onerror);
-      dest.removeListener('close', cleanup);
-    }
-
-    /**
-     * Close dangling pipes and handle unheard errors.
-     *
-     * @param {Error} err - Exception.
-     */
-    function onerror(err) {
-      var handlers = processor._events.error;
-
-      cleanup();
-
-      /* Cannot use `listenerCount` in node <= 0.12. */
-      if (!handlers || !handlers.length || handlers === onerror) {
-        throw err; /* Unhandled stream error in pipe. */
-      }
-    }
+/* Assert a parser is available. */
+function assertParser(name, Parser) {
+  if (!func(Parser)) {
+    throw new Error('Cannot `' + name + '` without `Parser`');
   }
 }
 
-/**
- * Check if `node` is a Unist node.
- *
- * @param {*} node - Value.
- * @return {boolean} - Whether `node` is a Unist node.
- */
-function isNode(node) {
-  return node && string(node.type) && node.type.length !== 0;
+/* Assert a compiler is available. */
+function assertCompiler(name, Compiler) {
+  if (!func(Compiler)) {
+    throw new Error('Cannot `' + name + '` without `Compiler`');
+  }
 }
 
-/**
- * Check if `fn` is a function.
- *
- * @param {*} fn - Value.
- * @return {boolean} - Whether `fn` is a function.
- */
-function isFunction(fn) {
-  return typeof fn === 'function';
+/* Assert the processor is not frozen. */
+function assertUnfrozen(name, frozen) {
+  if (frozen) {
+    throw new Error(
+      'Cannot invoke `' + name + '` on a frozen processor.\n' +
+      'Create a new processor first, by invoking it: ' +
+      'use `processor()` instead of `processor`.'
+    );
+  }
 }
 
-/**
- * Check if `compiler` is a Compiler.
- *
- * @param {*} compiler - Value.
- * @return {boolean} - Whether `compiler` is a Compiler.
- */
-function isCompiler(compiler) {
-  return isFunction(compiler) && compiler.prototype && isFunction(compiler.prototype.compile);
+/* Assert `node` is a Unist node. */
+function assertNode(node) {
+  if (!node || !string(node.type)) {
+    throw new Error('Expected node, got `' + node + '`');
+  }
 }
 
-/**
- * Check if `parser` is a Parser.
- *
- * @param {*} parser - Value.
- * @return {boolean} - Whether `parser` is a Parser.
- */
-function isParser(parser) {
-  return isFunction(parser) && parser.prototype && isFunction(parser.prototype.parse);
+/* Assert that `complete` is `true`. */
+function assertDone(name, asyncName, complete) {
+  if (!complete) {
+    throw new Error('`' + name + '` finished async. Use `' + asyncName + '` instead');
+  }
 }
 
-/**
- * Check if `processor` is a unified processor.
- *
- * @param {*} processor - Value.
- * @return {boolean} - Whether `processor` is a processor.
- */
-function isProcessor(processor) {
-  return isFunction(processor) && isFunction(processor.use) && isFunction(processor.process);
-}
+},{"bail":3,"extend":10,"has":15,"is-plain-obj":21,"isarray":52,"trough":49,"vfile":57,"x-is-function":85,"x-is-string":86}],52:[function(require,module,exports){
+var toString = {}.toString;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"bail":3,"events":10,"extend":11,"has":16,"is-buffer":20,"once":23,"trough":50,"vfile":57,"x-is-string":86}],53:[function(require,module,exports){
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+},{}],53:[function(require,module,exports){
 'use strict';
 
 var iterate = require('array-iterate');
@@ -5183,7 +3904,7 @@ function index(value) {
   return value && typeof value === 'number' ? value : 1;
 }
 
-},{"has":16}],55:[function(require,module,exports){
+},{"has":15}],55:[function(require,module,exports){
 'use strict';
 
 /* Expose. */
@@ -5525,7 +4246,7 @@ function assertPath(path, name) {
 }
 
 }).call(this,require('_process'))
-},{"_process":6,"has":16,"is-buffer":20,"path":47,"replace-ext":48,"unist-util-stringify-position":54,"x-is-string":86}],58:[function(require,module,exports){
+},{"_process":6,"has":15,"is-buffer":19,"path":46,"replace-ext":47,"unist-util-stringify-position":54,"x-is-string":86}],58:[function(require,module,exports){
 var createElement = require("./vdom/create-element.js")
 
 module.exports = createElement
@@ -5644,7 +4365,7 @@ function getPrototype(value) {
     }
 }
 
-},{"../vnode/is-vhook.js":74,"is-object":21}],63:[function(require,module,exports){
+},{"../vnode/is-vhook.js":74,"is-object":20}],63:[function(require,module,exports){
 var document = require("global/document")
 
 var applyProperties = require("./apply-properties")
@@ -5692,7 +4413,7 @@ function createElement(vnode, opts) {
     return node
 }
 
-},{"../vnode/handle-thunk.js":72,"../vnode/is-vnode.js":75,"../vnode/is-vtext.js":76,"../vnode/is-widget.js":77,"./apply-properties":62,"global/document":14}],64:[function(require,module,exports){
+},{"../vnode/handle-thunk.js":72,"../vnode/is-vnode.js":75,"../vnode/is-vtext.js":76,"../vnode/is-widget.js":77,"./apply-properties":62,"global/document":13}],64:[function(require,module,exports){
 // Maps a virtual DOM tree onto a real DOM tree in an efficient manner.
 // We don't want to read all of the DOM nodes in the tree so we use
 // the in-order tree indexing to eliminate recursion down certain branches.
@@ -6014,7 +4735,7 @@ function patchIndices(patches) {
     return indices
 }
 
-},{"./create-element":63,"./dom-index":64,"./patch-op":65,"global/document":14,"x-is-array":85}],67:[function(require,module,exports){
+},{"./create-element":63,"./dom-index":64,"./patch-op":65,"global/document":13,"x-is-array":84}],67:[function(require,module,exports){
 var isWidget = require("../vnode/is-widget.js")
 
 module.exports = updateWidget
@@ -6218,7 +4939,7 @@ function errorString(obj) {
     }
 }
 
-},{"../vnode/is-thunk":73,"../vnode/is-vhook":74,"../vnode/is-vnode":75,"../vnode/is-vtext":76,"../vnode/is-widget":77,"../vnode/vnode.js":79,"../vnode/vtext.js":81,"./hooks/ev-hook.js":68,"./hooks/soft-set-hook.js":69,"./parse-tag.js":71,"x-is-array":85}],71:[function(require,module,exports){
+},{"../vnode/is-thunk":73,"../vnode/is-vhook":74,"../vnode/is-vnode":75,"../vnode/is-vtext":76,"../vnode/is-widget":77,"../vnode/vnode.js":79,"../vnode/vtext.js":81,"./hooks/ev-hook.js":68,"./hooks/soft-set-hook.js":69,"./parse-tag.js":71,"x-is-array":84}],71:[function(require,module,exports){
 'use strict';
 
 var split = require('browser-split');
@@ -6530,7 +5251,7 @@ function getPrototype(value) {
   }
 }
 
-},{"../vnode/is-vhook":74,"is-object":21}],83:[function(require,module,exports){
+},{"../vnode/is-vhook":74,"is-object":20}],83:[function(require,module,exports){
 var isArray = require("x-is-array")
 
 var VPatch = require("../vnode/vpatch")
@@ -6959,42 +5680,7 @@ function appendPatch(apply, patch) {
     }
 }
 
-},{"../vnode/handle-thunk":72,"../vnode/is-thunk":73,"../vnode/is-vnode":75,"../vnode/is-vtext":76,"../vnode/is-widget":77,"../vnode/vpatch":80,"./diff-props":82,"x-is-array":85}],84:[function(require,module,exports){
-// Returns a wrapper function that returns a wrapped callback
-// The wrapper function should do some stuff, and return a
-// presumably different callback function.
-// This makes sure that own properties are retained, so that
-// decorations and such are not lost along the way.
-module.exports = wrappy
-function wrappy (fn, cb) {
-  if (fn && cb) return wrappy(fn)(cb)
-
-  if (typeof fn !== 'function')
-    throw new TypeError('need wrapper function')
-
-  Object.keys(fn).forEach(function (k) {
-    wrapper[k] = fn[k]
-  })
-
-  return wrapper
-
-  function wrapper() {
-    var args = new Array(arguments.length)
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i]
-    }
-    var ret = fn.apply(this, args)
-    var cb = args[args.length-1]
-    if (typeof ret === 'function' && ret !== cb) {
-      Object.keys(cb).forEach(function (k) {
-        ret[k] = cb[k]
-      })
-    }
-    return ret
-  }
-}
-
-},{}],85:[function(require,module,exports){
+},{"../vnode/handle-thunk":72,"../vnode/is-thunk":73,"../vnode/is-vnode":75,"../vnode/is-vtext":76,"../vnode/is-widget":77,"../vnode/vpatch":80,"./diff-props":82,"x-is-array":84}],84:[function(require,module,exports){
 var nativeIsArray = Array.isArray
 var toString = Object.prototype.toString
 
@@ -7002,6 +5688,11 @@ module.exports = nativeIsArray || isArray
 
 function isArray(obj) {
     return toString.call(obj) === "[object Array]"
+}
+
+},{}],85:[function(require,module,exports){
+module.exports = function isFunction (fn) {
+  return Object.prototype.toString.call(fn) === '[object Function]'
 }
 
 },{}],86:[function(require,module,exports){
