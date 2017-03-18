@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "browserify": "^14.0.0",
-    "xo": "^0.17.1"
+    "xo": "^0.18.0"
   },
   "scripts": {
     "build": "browserify index.js > build.js",
