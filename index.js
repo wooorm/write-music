@@ -110,11 +110,13 @@ function color(count) {
 }
 
 function hues() {
+  /* eslint-disable no-multi-assign */
   var colors = [];
   colors[0] = colors[1] = colors[2] = 60;
   colors[3] = colors[4] = 300;
   colors[5] = colors[6] = 0;
   colors[7] = colors[8] = colors[9] = colors[10] = colors[11] = colors[12] = 120;
+  /* eslint-enable no-multi-assign */
   colors.push(180);
   return colors;
 }
