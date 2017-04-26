@@ -129,5 +129,5 @@ function rows(node) {
   return Math.ceil(
     node.getBoundingClientRect().height /
     parseInt(win.getComputedStyle(node).lineHeight, 10)
-  );
+  ) + 1;
 }
