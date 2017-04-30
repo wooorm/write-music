@@ -62,5 +62,4 @@ textarea, .draw {
 textarea {
   position: absolute;
   top: 0;
-  overflow-y: auto;
 }
