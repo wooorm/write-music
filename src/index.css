@@ -10,7 +10,10 @@ html {
 
 textarea { color: inherit; }
 
-.credits { text-align: center; margin-bottom: 0; }
+.credits {
+  text-align: center;
+  margin-bottom: 0;
+}
 
 a {
   color: hsl(300, 95%, 43%);
@@ -18,13 +21,17 @@ a {
   transition: color 200ms;
 }
 
-a:focus, a:hover { color: initial; }
+a:focus,
+a:hover {
+  color: initial;
+}
 
 template { display: none; }
 
 body {
   margin: 0;
-  padding: 4em 1em 0 1em;
+  padding: 0 1em;
+  padding-bottom: 4em;
 }
 
 .editor {
@@ -34,7 +41,8 @@ body {
   overflow: hidden;
 }
 
-textarea, .draw {
+textarea,
+.draw {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -42,6 +50,7 @@ textarea, .draw {
   outline: none;
   resize: none;
   overflow: hidden;
+
   /* Can’t use a nice font: kerning renders differently in textareas. */
   font-family: monospace;
   line-height: inherit;
@@ -49,8 +58,6 @@ textarea, .draw {
   background: transparent;
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-size: inherit;
-  line-height: inherit;
 }
 
 .draw {
