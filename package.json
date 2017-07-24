@@ -11,10 +11,19 @@
   },
   "devDependencies": {
     "browserify": "^14.0.0",
+    "bundle-collapser": "^1.2.1",
+    "cssnano": "^3.10.0",
+    "esmangle": "^1.0.1",
+    "postcss-cli": "^4.1.0",
+    "rehype-cli": "^4.0.0",
+    "rehype-preset-minify": "^2.0.0",
     "xo": "^0.18.0"
   },
   "scripts": {
-    "build": "browserify index.js > build.js",
+    "build:js": "browserify -p bundle-collapser/plugin src/index.js | esmangle > dest/index.js",
+    "build:css": "postcss src/index.css > dest/index.css",
+    "build:html": "rehype -u preset-minify src/index.html -o dest",
+    "build": "npm run build:js && npm run build:css && npm run build:html",
     "lint": "xo",
     "test": "npm run build && npm run lint"
   },
@@ -24,5 +33,12 @@
     "ignore": [
       "build.js"
     ]
+  },
+  "postcss": {
+    "plugins": {
+      "cssnano": {
+        "preset": "default"
+      }
+    }
   }
 }
