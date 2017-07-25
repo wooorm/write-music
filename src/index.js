@@ -11,9 +11,9 @@ var debounce = require('debounce');
 
 var processor = unified().use(english);
 var hue = hues();
-var root = doc.getElementById('root');
+var main = doc.getElementsByTagName('main')[0];
 var tree = render(doc.getElementsByTagName('template')[0].innerHTML);
-var dom = root.appendChild(createElement(tree));
+var dom = main.appendChild(createElement(tree));
 
 function onchange(ev) {
   var next = render(ev.target.value);
@@ -32,16 +32,42 @@ function render(text) {
 
   setTimeout(resize, 4);
 
-  return h('div', {className: 'editor'}, [
-    h('div', {key: 'draw', className: 'draw'}, pad(all(tree))),
-    h('textarea', {
-      key: 'area',
-      value: text,
-      oninput: change,
-      onpaste: change,
-      onkeyup: change,
-      onmouseup: change
-    })
+  return h('div', [
+    h('section.highlight', [
+      h('h1', {key: 'title'}, 'write music')
+    ]),
+    h('div', {key: 'editor', className: 'editor'}, [
+      h('div', {key: 'draw', className: 'draw'}, pad(all(tree))),
+      h('textarea', {
+        key: 'area',
+        value: text,
+        oninput: change,
+        onpaste: change,
+        onkeyup: change,
+        onmouseup: change
+      })
+    ]),
+    h('section.highlight', [
+      h('p', {key: 'byline'}, [
+        'Based on a tip by ',
+        h('a', {href: 'http://www.garyprovost.com/_i__b__font_size___1__100_ways_to_improve_your_writing___font_size__font_size__2_109049.htm'}, 'Gary Provost'),
+        ' (“Vary sentence length”), and a ',
+        h('a', {href: 'https://www.helpscout.net/blog/damn-hard-writing/'}, 'visualisation by Gregory Ciotti'),
+        '.'
+      ]),
+      h('p', {key: 'ps'}, [
+        'P.S. You can edit the text above.'
+      ])
+    ]),
+    h('section.credits', {key: 'credits'}, [
+      h('p', [
+        h('a', {href: 'https://github.com/wooorm/write-music'}, 'Fork this website'),
+        ' • ',
+        h('a', {href: 'https://github.com/wooorm/write-music/blob/src/LICENSE'}, 'MIT'),
+        ' • ',
+        h('a', {href: 'http://wooorm.com'}, '@wooorm')
+      ])
+    ])
   ]);
 
   function all(node) {
