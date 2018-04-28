@@ -1,41 +1,39 @@
-var doc = require('global/document');
-var win = require('global/window');
-var createElement = require('virtual-dom/create-element');
-var diff = require('virtual-dom/diff');
-var patch = require('virtual-dom/patch');
-var h = require('virtual-dom/h');
-var unified = require('unified');
-var english = require('retext-english');
-var visit = require('unist-util-visit');
-var debounce = require('debounce');
+var doc = require('global/document')
+var win = require('global/window')
+var createElement = require('virtual-dom/create-element')
+var diff = require('virtual-dom/diff')
+var patch = require('virtual-dom/patch')
+var h = require('virtual-dom/h')
+var unified = require('unified')
+var english = require('retext-english')
+var visit = require('unist-util-visit')
+var debounce = require('debounce')
 
-var processor = unified().use(english);
-var hue = hues();
-var main = doc.getElementsByTagName('main')[0];
-var tree = render(doc.getElementsByTagName('template')[0].innerHTML);
-var dom = main.appendChild(createElement(tree));
+var processor = unified().use(english)
+var hue = hues()
+var main = doc.getElementsByTagName('main')[0]
+var tree = render(doc.getElementsByTagName('template')[0].innerHTML)
+var dom = main.appendChild(createElement(tree))
 
 function onchange(ev) {
-  var next = render(ev.target.value);
-  dom = patch(dom, diff(tree, next));
-  tree = next;
+  var next = render(ev.target.value)
+  dom = patch(dom, diff(tree, next))
+  tree = next
 }
 
 function resize() {
-  dom.lastChild.rows = rows(dom.firstChild);
+  dom.lastChild.rows = rows(dom.firstChild)
 }
 
 function render(text) {
-  var tree = processor.runSync(processor.parse(text));
-  var change = debounce(onchange, 4);
-  var key = 0;
+  var tree = processor.runSync(processor.parse(text))
+  var change = debounce(onchange, 4)
+  var key = 0
 
-  setTimeout(resize, 4);
+  setTimeout(resize, 4)
 
   return h('div', [
-    h('section.highlight', [
-      h('h1', {key: 'title'}, 'write music')
-    ]),
+    h('section.highlight', [h('h1', {key: 'title'}, 'write music')]),
     h('div', {key: 'editor', className: 'editor'}, [
       h('div', {key: 'draw', className: 'draw'}, pad(all(tree))),
       h('textarea', {
@@ -50,110 +48,129 @@ function render(text) {
     h('section.highlight', [
       h('p', {key: 'byline'}, [
         'Based on a tip by ',
-        h('a', {href: 'http://www.garyprovost.com/_i__b__font_size___1__100_ways_to_improve_your_writing___font_size__font_size__2_109049.htm'}, 'Gary Provost'),
+        h(
+          'a',
+          {
+            href:
+              'http://www.garyprovost.com/_i__b__font_size___1__100_ways_to_improve_your_writing___font_size__font_size__2_109049.htm'
+          },
+          'Gary Provost'
+        ),
         ' (“Vary sentence length”), and a ',
-        h('a', {href: 'https://www.helpscout.net/blog/damn-hard-writing/'}, 'visualisation by Gregory Ciotti'),
+        h(
+          'a',
+          {href: 'https://www.helpscout.net/blog/damn-hard-writing/'},
+          'visualisation by Gregory Ciotti'
+        ),
         '.'
       ]),
-      h('p', {key: 'ps'}, [
-        'P.S. You can edit the text above.'
-      ])
+      h('p', {key: 'ps'}, ['P.S. You can edit the text above.'])
     ]),
     h('section.credits', {key: 'credits'}, [
       h('p', [
-        h('a', {href: 'https://github.com/wooorm/write-music'}, 'Fork this website'),
+        h(
+          'a',
+          {href: 'https://github.com/wooorm/write-music'},
+          'Fork this website'
+        ),
         ' • ',
-        h('a', {href: 'https://github.com/wooorm/write-music/blob/src/LICENSE'}, 'MIT'),
+        h(
+          'a',
+          {href: 'https://github.com/wooorm/write-music/blob/src/LICENSE'},
+          'MIT'
+        ),
         ' • ',
         h('a', {href: 'http://wooorm.com'}, '@wooorm')
       ])
     ])
-  ]);
+  ])
 
   function all(node) {
-    var children = node.children;
-    var length = children.length;
-    var index = -1;
-    var results = [];
+    var children = node.children
+    var length = children.length
+    var index = -1
+    var results = []
 
     while (++index < length) {
-      results = results.concat(one(children[index]));
+      results = results.concat(one(children[index]))
     }
 
-    return results;
+    return results
   }
 
   function one(node) {
-    var result = 'value' in node ? node.value : all(node);
-    var styles = style(node);
+    var result = 'value' in node ? node.value : all(node)
+    var styles = style(node)
 
     if (styles) {
-      key++;
-      result = h('span', {key: 's-' + key, style: styles}, result);
+      key++
+      result = h('span', {key: 's-' + key, style: styles}, result)
     }
 
-    return result;
+    return result
   }
 
   /* Trailing white-space in a `textarea` is shown, but not in a `div`
    * with `white-space: pre-wrap`. Add a `br` to make the last newline
    * explicit. */
   function pad(nodes) {
-    var tail = nodes[nodes.length - 1];
+    var tail = nodes[nodes.length - 1]
 
     if (typeof tail === 'string' && tail.charAt(tail.length - 1) === '\n') {
-      nodes.push(h('br', {key: 'break'}));
+      nodes.push(h('br', {key: 'break'}))
     }
 
-    return nodes;
+    return nodes
   }
 }
 
 function style(node) {
-  var result = {};
+  var result = {}
 
   if (node.type === 'SentenceNode') {
-    result.backgroundColor = color(count(node));
-    return result;
+    result.backgroundColor = color(count(node))
+    return result
   }
 }
 
 function count(node) {
-  var value = 0;
+  var value = 0
 
-  visit(node, 'WordNode', add);
+  visit(node, 'WordNode', add)
 
-  return value;
+  return value
 
   function add() {
-    value++;
+    value++
   }
 }
 
 function color(count) {
-  var val = count < hue.length ? hue[count] : hue[hue.length - 1];
-  return 'hsl(' + [val, '93%', '85%'].join(', ') + ')';
+  var val = count < hue.length ? hue[count] : hue[hue.length - 1]
+  return 'hsl(' + [val, '93%', '85%'].join(', ') + ')'
 }
 
 function hues() {
   /* eslint-disable no-multi-assign */
-  var colors = [];
-  colors[0] = colors[1] = colors[2] = 60;
-  colors[3] = colors[4] = 300;
-  colors[5] = colors[6] = 0;
-  colors[7] = colors[8] = colors[9] = colors[10] = colors[11] = colors[12] = 120;
+  var colors = []
+  colors[0] = colors[1] = colors[2] = 60
+  colors[3] = colors[4] = 300
+  colors[5] = colors[6] = 0
+  colors[7] = colors[8] = colors[9] = colors[10] = colors[11] = colors[12] = 120
   /* eslint-enable no-multi-assign */
-  colors.push(180);
-  return colors;
+  colors.push(180)
+  return colors
 }
 
 function rows(node) {
   if (!node) {
-    return;
+    return
   }
 
-  return Math.ceil(
-    node.getBoundingClientRect().height /
-    parseInt(win.getComputedStyle(node).lineHeight, 10)
-  ) + 1;
+  return (
+    Math.ceil(
+      node.getBoundingClientRect().height /
+        parseInt(win.getComputedStyle(node).lineHeight, 10)
+    ) + 1
+  )
 }
