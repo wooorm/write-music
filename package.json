@@ -10,17 +10,17 @@
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
-    "browserify": "^14.0.0",
+    "browserify": "^16.0.0",
     "bundle-collapser": "^1.2.1",
     "cssnano": "^3.10.0",
     "esmangle": "^1.0.1",
-    "postcss-cli": "^4.1.0",
-    "rehype-cli": "^4.0.0",
+    "postcss-cli": "^5.0.0",
+    "rehype-cli": "^5.0.0",
     "rehype-preset-minify": "^2.0.0",
     "rehype-prevent-favicon-request": "^1.0.0",
-    "stylelint": "^8.0.0",
-    "stylelint-config-standard": "^17.0.0",
-    "xo": "^0.18.0"
+    "stylelint": "^9.0.0",
+    "stylelint-config-standard": "^18.0.0",
+    "xo": "^0.20.0"
   },
   "scripts": {
     "build:js": "browserify -p bundle-collapser/plugin src/index.js | esmangle > dest/index.js",
@@ -38,9 +38,11 @@
   "xo": {
     "space": true,
     "esnext": false,
-    "ignore": [
-      "build.js"
-    ]
+    "rules": {
+      "no-var": "off",
+      "object-shorthand": "off",
+      "prefer-arrow-callback": "off"
+    }
   },
   "postcss": {
     "plugins": {
