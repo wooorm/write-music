@@ -76,7 +76,7 @@ function render(text) {
         ' • ',
         h(
           'a',
-          {href: 'https://github.com/wooorm/write-music/blob/src/LICENSE'},
+          {href: 'https://github.com/wooorm/write-music/blob/src/license'},
           'MIT'
         ),
         ' • ',
