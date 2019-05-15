@@ -11,8 +11,8 @@ var debounce = require('debounce')
 
 var processor = unified().use(english)
 var hue = hues()
-var main = doc.getElementsByTagName('main')[0]
-var tree = render(doc.getElementsByTagName('template')[0].innerHTML)
+var main = doc.querySelectorAll('main')[0]
+var tree = render(doc.querySelectorAll('template')[0].innerHTML)
 var dom = main.appendChild(createElement(tree))
 
 function onchange(ev) {
