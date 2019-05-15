@@ -1,9 +1,9 @@
 # write-music
 
-[![screenshot](screenshot.png)](http://wooorm.com/write-music)
+[![screenshot](screenshot.png)](https://wooorm.com/write-music)
 
 ## Related
 
-*   [common-words](http://github.com/wooorm/common-words)
-*   [readability](http://github.com/wooorm/readability)
-*   [short-words](http://github.com/wooorm/short-words)
+*   [common-words](https://github.com/wooorm/common-words)
+*   [readability](https://github.com/wooorm/readability)
+*   [short-words](https://github.com/wooorm/short-words)

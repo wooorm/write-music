@@ -48,14 +48,7 @@ function render(text) {
     h('section.highlight', [
       h('p', {key: 'byline'}, [
         'Based on a tip by ',
-        h(
-          'a',
-          {
-            href:
-              'http://www.garyprovost.com/_i__b__font_size___1__100_ways_to_improve_your_writing___font_size__font_size__2_109049.htm'
-          },
-          'Gary Provost'
-        ),
+        h('a', {href: 'https://www.garyprovost.com'}, 'Gary Provost'),
         ' (“Vary sentence length”), and a ',
         h(
           'a',
@@ -80,7 +73,7 @@ function render(text) {
           'MIT'
         ),
         ' • ',
-        h('a', {href: 'http://wooorm.com'}, '@wooorm')
+        h('a', {href: 'https://wooorm.com'}, '@wooorm')
       ])
     ])
   ])

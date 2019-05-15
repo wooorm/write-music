@@ -4,9 +4,9 @@
   "license": "MIT",
   "repository": "wooorm/write-music",
   "bugs": "https://github.com/wooorm/write-music/issues",
-  "author": "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)",
+  "author": "Titus Wormer <tituswormer@gmail.com> (https://wooorm.com)",
   "contributors": [
-    "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)"
+    "Titus Wormer <tituswormer@gmail.com> (https://wooorm.com)"
   ],
   "dependencies": {
     "debounce": "^1.0.0",
