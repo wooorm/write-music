@@ -1,5 +1,15 @@
 html {
-  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", sans-serif;
+  font-family:
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Helvetica Neue',
+    'Segoe UI',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Open Sans',
+    sans-serif;
   background-color: hsl(0, 0%, 95%);
   word-break: break-word;
 }
@@ -25,7 +35,9 @@ main {
   }
 }
 
-main > div { border-radius: inherit; }
+main > div {
+  border-radius: inherit;
+}
 
 section {
   margin: calc(2em + 2ex) calc(-2em - 2ex);
@@ -61,7 +73,9 @@ section:last-child {
   margin-bottom: 0;
 }
 
-.highlight { background-color: hsl(0, 0%, 100%); }
+.highlight {
+  background-color: hsl(0, 0%, 100%);
+}
 
 * {
   line-height: calc(1em + 1ex);
@@ -93,7 +107,9 @@ a:target {
   color: inherit;
 }
 
-template { display: none; }
+template {
+  display: none;
+}
 
 .editor {
   position: relative;
@@ -133,4 +149,6 @@ textarea {
   color: inherit;
 }
 
-.credits { text-align: center; }
+.credits {
+  text-align: center;
+}

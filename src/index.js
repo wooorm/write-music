@@ -103,9 +103,9 @@ function render(text) {
     return result
   }
 
-  /* Trailing white-space in a `textarea` is shown, but not in a `div`
-   * with `white-space: pre-wrap`. Add a `br` to make the last newline
-   * explicit. */
+  // Trailing white-space in a `textarea` is shown, but not in a `div` with
+  // `white-space: pre-wrap`.
+  // Add a `br` to make the last newline explicit.
   function pad(nodes) {
     var tail = nodes[nodes.length - 1]
 
