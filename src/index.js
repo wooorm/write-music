@@ -139,8 +139,8 @@ function count(node) {
 }
 
 function color(count) {
-  var val = count < hue.length ? hue[count] : hue[hue.length - 1]
-  return 'hsl(' + [val, '93%', '70%', 0.5].join(', ') + ')'
+  var value = count < hue.length ? hue[count] : hue[hue.length - 1]
+  return 'hsl(' + [value, '93%', '70%', 0.5].join(', ') + ')'
 }
 
 function hues() {
