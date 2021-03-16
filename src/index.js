@@ -1,13 +1,13 @@
-var doc = require('global/document')
-var win = require('global/window')
-var createElement = require('virtual-dom/create-element')
-var diff = require('virtual-dom/diff')
-var patch = require('virtual-dom/patch')
-var h = require('virtual-dom/h')
-var unified = require('unified')
-var english = require('retext-english')
-var visit = require('unist-util-visit')
-var debounce = require('debounce')
+import doc from 'global/document.js'
+import win from 'global/window.js'
+import createElement from 'virtual-dom/create-element.js'
+import diff from 'virtual-dom/diff.js'
+import patch from 'virtual-dom/patch.js'
+import h from 'virtual-dom/h.js'
+import unified from 'unified'
+import english from 'retext-english'
+import visit from 'unist-util-visit'
+import debounce from 'debounce'
 
 var processor = unified().use(english)
 var hue = hues()
@@ -163,7 +163,7 @@ function rows(node) {
   return (
     Math.ceil(
       node.getBoundingClientRect().height /
-        parseInt(win.getComputedStyle(node).lineHeight, 10)
+        Number.parseInt(win.getComputedStyle(node).lineHeight, 10)
     ) + 1
   )
 }
