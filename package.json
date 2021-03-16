@@ -15,19 +15,19 @@
     "global": "^4.0.0",
     "postcss-cli": "^8.0.0",
     "prettier": "^2.0.0",
-    "rehype-cli": "^9.0.0",
+    "rehype-cli": "^10.0.0",
     "rehype-preset-minify": "^5.0.0",
     "rehype-prevent-favicon-request": "^2.0.0",
-    "remark-cli": "^9.0.0-alpha.1",
+    "remark-cli": "^9.0.0",
     "remark-preset-wooorm": "^8.0.0",
     "retext-english": "^3.0.0",
     "stylelint": "^13.0.0",
-    "stylelint-config-standard": "^20.0.0",
+    "stylelint-config-standard": "^21.0.0",
     "tinyify": "^3.0.0",
     "unified": "^9.0.0",
     "unist-util-visit": "^2.0.0",
     "virtual-dom": "^2.0.0",
-    "xo": "^0.33.0"
+    "xo": "^0.38.0"
   },
   "scripts": {
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
@@ -52,7 +52,7 @@
     "prettier": true,
     "esnext": false,
     "rules": {
-      "unicorn/prefer-node-append": "off",
+      "unicorn/prefer-dom-node-append": "off",
       "unicorn/prefer-number-properties": "off"
     }
   },
