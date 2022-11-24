@@ -30,12 +30,12 @@
     "xo": "^0.53.0"
   },
   "scripts": {
+    "generate:js": "esbuild src/index.js --bundle --minify --target=es6 --outfile=dest/index.nomodule.js && esbuild src/index.js --bundle --minify --target=es2020 --format=esm --outfile=dest/index.module.js",
+    "generate:css": "postcss src/index.css > dest/index.css",
+    "generate:html": "rehype -u preset-minify -u prevent-favicon-request src -o dest",
+    "generate": "npm run generate:js && npm run generate:css && npm run generate:html",
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
-    "build:js": "esbuild src/index.js --bundle --minify --target=es6 --outfile=dest/index.nomodule.js && esbuild src/index.js --bundle --minify --target=es2020 --format=esm --outfile=dest/index.module.js",
-    "build:css": "postcss src/index.css > dest/index.css",
-    "build:html": "rehype -u preset-minify -u prevent-favicon-request src/index.html -o dest",
-    "build": "npm run build:js && npm run build:css && npm run build:html",
-    "test": "npm run format && npm run build"
+    "test": "npm run format && npm run generate"
   },
   "stylelint": {
     "extends": "stylelint-config-standard"
