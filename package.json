@@ -12,22 +12,22 @@
   "devDependencies": {
     "cssnano": "^5.0.0",
     "debounce": "^1.0.0",
-    "esbuild": "^0.14.0",
+    "esbuild": "^0.15.0",
     "global": "^4.0.0",
-    "postcss-cli": "^9.0.0",
+    "postcss-cli": "^10.0.0",
     "prettier": "^2.0.0",
     "rehype-cli": "^11.0.0",
     "rehype-preset-minify": "^6.0.0",
     "rehype-prevent-favicon-request": "^3.0.0",
-    "remark-cli": "^10.0.0",
+    "remark-cli": "^11.0.0",
     "remark-preset-wooorm": "^9.0.0",
     "retext-english": "^4.0.0",
     "stylelint": "^14.0.0",
-    "stylelint-config-standard": "^24.0.0",
+    "stylelint-config-standard": "^29.0.0",
     "unified": "^10.0.0",
     "unist-util-visit": "^4.0.0",
     "virtual-dom": "^2.0.0",
-    "xo": "^0.47.0"
+    "xo": "^0.53.0"
   },
   "scripts": {
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
