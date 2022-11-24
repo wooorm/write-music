@@ -4,6 +4,10 @@
 
 ## Related
 
-*   [common-words](https://github.com/wooorm/common-words)
-*   [readability](https://github.com/wooorm/readability)
-*   [short-words](https://github.com/wooorm/short-words)
+*   [`common-words`](https://github.com/wooorm/common-words)
+*   [`readability`](https://github.com/wooorm/readability)
+*   [`short-words`](https://github.com/wooorm/short-words)
+
+## License
+
+[MIT](license) © [Titus Wormer](https://wooorm.com)
