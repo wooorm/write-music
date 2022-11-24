@@ -1,30 +1,58 @@
-import doc from 'global/document.js'
-import win from 'global/window.js'
-import createElement from 'virtual-dom/create-element.js'
-import diff from 'virtual-dom/diff.js'
-import patch from 'virtual-dom/patch.js'
-import h from 'virtual-dom/h.js'
+/// <reference lib="dom" />
+/* eslint-env browser */
+
+/**
+ * @typedef {import('virtual-dom').VNode} VNode
+ * @typedef {import('virtual-dom').VProperties} VProperties
+ * @typedef {import('nlcst').Parent} NlcstParent
+ * @typedef {import('nlcst').Root} NlcstRoot
+ * @typedef {import('nlcst').Content} NlcstContent
+ * @typedef {NlcstRoot | NlcstContent} NlcstNode
+ */
+
+import virtualDom from 'virtual-dom'
 import {unified} from 'unified'
 import retextEnglish from 'retext-english'
 import {visit} from 'unist-util-visit'
 import debounce from 'debounce'
 
+const {create, h, diff, patch} = virtualDom
+
 const processor = unified().use(retextEnglish)
 const hue = hues()
-const main = doc.querySelectorAll('main')[0]
-let tree = render(doc.querySelectorAll('template')[0].innerHTML)
-let dom = main.appendChild(createElement(tree))
+const main = document.querySelectorAll('main')[0]
+let tree = render(document.querySelectorAll('template')[0].innerHTML)
+let dom = main.appendChild(create(tree))
 
+/**
+ * @param {KeyboardEvent|MouseEvent|ClipboardEvent} ev
+ */
 function onchange(ev) {
-  const next = render(ev.target.value)
-  dom = patch(dom, diff(tree, next))
-  tree = next
+  if (
+    ev &&
+    ev.target &&
+    'value' in ev.target &&
+    typeof ev.target.value === 'string'
+  ) {
+    const next = render(ev.target.value)
+    dom = patch(dom, diff(tree, next))
+    tree = next
+  }
 }
 
 function resize() {
-  dom.lastChild.rows = rows(dom.firstChild)
+  const textarea = dom.querySelector('textarea')
+  const draw = dom.querySelector('.draw')
+  if (!textarea) throw new Error('Expected `textarea` `dom`')
+  if (!draw) throw new Error('Expected `.draw` in `dom`')
+  const result = rows(draw)
+  if (result !== undefined) textarea.rows = result
 }
 
+/**
+ * @param {string} text
+ * @returns {VNode}
+ */
 function render(text) {
   const tree = processor.runSync(processor.parse(text))
   const change = debounce(onchange, 4)
@@ -35,15 +63,19 @@ function render(text) {
   return h('div', [
     h('section.highlight', [h('h1', {key: 'title'}, 'write music')]),
     h('div', {key: 'editor', className: 'editor'}, [
-      h('div', {key: 'draw', className: 'draw'}, pad(all(tree))),
-      h('textarea', {
-        key: 'area',
-        value: text,
-        oninput: change,
-        onpaste: change,
-        onkeyup: change,
-        onmouseup: change
-      })
+      h('div', {key: 'draw', className: 'draw'}, pad(all(tree, []))),
+      h(
+        'textarea',
+        {
+          key: 'area',
+          value: text,
+          oninput: change,
+          onpaste: change,
+          onkeyup: change,
+          onmouseup: change
+        },
+        []
+      )
     ]),
     h('section.highlight', [
       h('p', {key: 'byline'}, [
@@ -78,54 +110,86 @@ function render(text) {
     ])
   ])
 
-  function all(node) {
+  /**
+   * @param {NlcstParent} node
+   * @param {Array<number>} parentIds
+   * @returns {Array<VNode|string>}
+   */
+  function all(node, parentIds) {
     const children = node.children
     const length = children.length
     let index = -1
-    let results = []
+    /** @type {Array<VNode|string>} */
+    const results = []
 
     while (++index < length) {
-      results = results.concat(one(children[index]))
+      const ids = [...parentIds, index]
+      const result = one(children[index], ids)
+
+      if (Array.isArray(result)) {
+        results.push(...result)
+      } else {
+        results.push(result)
+      }
     }
 
     return results
   }
 
-  function one(node) {
-    let result = 'value' in node ? node.value : all(node)
+  /**
+   * @param {NlcstNode} node
+   * @param {Array<number>} parentIds
+   * @returns {string|VNode|Array<VNode|string>}
+   */
+  function one(node, parentIds) {
+    /** @type {string|VNode|Array<VNode|string>} */
+    let result = 'value' in node ? node.value : all(node, parentIds)
     const styles = style(node)
+    const id = parentIds.join('-') + '-' + key
 
     if (styles) {
+      result = h('span', {key: id, style: styles}, result)
       key++
-      result = h('span', {key: 's-' + key, style: styles}, result)
     }
 
     return result
   }
 
-  // Trailing white-space in a `textarea` is shown, but not in a `div` with
-  // `white-space: pre-wrap`.
-  // Add a `br` to make the last newline explicit.
+  /**
+   * Trailing white-space in a `textarea` is shown, but not in a `div` with
+   * `white-space: pre-wrap`.
+   * Add a `br` to make the last newline explicit.
+   *
+   * @param {Array<VNode|string>} nodes
+   * @returns {Array<VNode|string>}
+   */
   function pad(nodes) {
     const tail = nodes[nodes.length - 1]
 
     if (typeof tail === 'string' && tail.charAt(tail.length - 1) === '\n') {
-      nodes.push(h('br', {key: 'break'}))
+      nodes.push(h('br', {key: 'break'}, []))
     }
 
     return nodes
   }
 }
 
+/**
+ * @param {NlcstNode} node
+ * @returns {Record<string, string>|void}
+ */
 function style(node) {
-  const result = {}
-
   if (node.type === 'SentenceNode') {
-    result.backgroundColor = color(count(node))
-    return result
+    return {
+      backgroundColor: color(count(node))
+    }
   }
 }
 
+/**
+ * @param {NlcstParent} node
+ * @returns {number}
+ */
 function count(node) {
   let value = 0
 
@@ -138,6 +202,11 @@ function count(node) {
   }
 }
 
+/**
+ * @param {number} count
+ * @returns {string}
+ */
+
 function color(count) {
   const value = count < hue.length ? hue[count] : hue[hue.length - 1]
   return 'hsl(' + [value, '93%', '70%', 0.5].join(', ') + ')'
@@ -145,6 +214,7 @@ function color(count) {
 
 function hues() {
   /* eslint-disable no-multi-assign */
+  /** @type {Array<number>} */
   const colors = []
   colors[0] = colors[1] = colors[2] = 60
   colors[3] = colors[4] = 300
@@ -155,15 +225,17 @@ function hues() {
   return colors
 }
 
+/**
+ * @param {Element|null} node
+ * @returns {number|void}
+ */
 function rows(node) {
-  if (!node) {
+  if (!node || node.nodeType !== document.ELEMENT_NODE) {
     return
   }
 
-  return (
-    Math.ceil(
-      node.getBoundingClientRect().height /
-        Number.parseInt(win.getComputedStyle(node).lineHeight, 10)
-    ) + 1
+  return Math.ceil(
+    node.getBoundingClientRect().height /
+      Number.parseInt(window.getComputedStyle(node).lineHeight, 10)
   )
 }

@@ -10,6 +10,8 @@
   ],
   "type": "module",
   "devDependencies": {
+    "@types/debounce": "^1.0.0",
+    "@types/virtual-dom": "^2.0.0",
     "cssnano": "^5.0.0",
     "debounce": "^1.0.0",
     "esbuild": "^0.15.0",
@@ -24,18 +26,21 @@
     "retext-english": "^4.0.0",
     "stylelint": "^14.0.0",
     "stylelint-config-standard": "^29.0.0",
+    "type-coverage": "^2.0.0",
+    "typescript": "^4.0.0",
     "unified": "^10.0.0",
     "unist-util-visit": "^4.0.0",
     "virtual-dom": "^2.0.0",
     "xo": "^0.53.0"
   },
   "scripts": {
+    "build": "tsc --build --clean && tsc --build && type-coverage",
+    "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
     "generate:js": "esbuild src/index.js --bundle --minify --target=es6 --outfile=dest/index.nomodule.js && esbuild src/index.js --bundle --minify --target=es2020 --format=esm --outfile=dest/index.module.js",
     "generate:css": "postcss src/index.css > dest/index.css",
     "generate:html": "rehype -u preset-minify -u prevent-favicon-request src -o dest",
     "generate": "npm run generate:js && npm run generate:css && npm run generate:html",
-    "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
-    "test": "npm run format && npm run generate"
+    "test": "npm run build && npm run format && npm run generate"
   },
   "stylelint": {
     "extends": "stylelint-config-standard"
@@ -65,5 +70,11 @@
     "plugins": [
       "preset-wooorm"
     ]
+  },
+  "typeCoverage": {
+    "atLeast": 100,
+    "detail": true,
+    "strict": true,
+    "ignoreCatch": true
   }
 }
