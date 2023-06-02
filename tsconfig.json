@@ -1,5 +1,5 @@
 {
-  "include": ["**/*.js"],
+  "include": ["**/*.js", "**/*.jsx"],
   "exclude": ["dest/", "node_modules/"],
   "compilerOptions": {
     "customConditions": ["development"],
@@ -8,6 +8,7 @@
     "emitDeclarationOnly": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
     "lib": ["es2020"],
     "module": "node16",
     "newLine": "lf",
