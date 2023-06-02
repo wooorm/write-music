@@ -1,7 +1,8 @@
 {
-  "include": ["**/**.js"],
-  "exclude": ["coverage/", "node_modules/", "dest/"],
+  "include": ["**/*.js"],
+  "exclude": ["dest/", "node_modules/"],
   "compilerOptions": {
+    "customConditions": ["development"],
     "checkJs": true,
     "declaration": true,
     "emitDeclarationOnly": true,
