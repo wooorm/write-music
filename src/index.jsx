@@ -57,8 +57,8 @@ function Playground() {
       <section className="highlight">
         <p>
           Based on a tip by{' '}
-          <a href="https://www.garyprovost.com">Gary Provost</a>
-          (“Vary sentence length”), and a{' '}
+          <a href="https://www.garyprovost.com">Gary Provost</a> (“Vary sentence
+          length”), and a{' '}
           <a href="https://www.helpscout.net/blog/damn-hard-writing/">
             visualisation by Gregory Ciotti
           </a>

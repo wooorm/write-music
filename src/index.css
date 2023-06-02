@@ -1,7 +1,14 @@
 :root {
+  --color-canvas-back: #f6f8fa;
+  --color-canvas-front: #fff;
+  --color-border: #d0d7de;
+  --color-hl: #0969da;
+  --color-fg: #0d1117;
+
   color-scheme: light dark;
   font-family: system-ui;
-  background-color: hsl(0deg 0% 95%);
+  background-color: var(--color-canvas-back);
+  color: var(--color-fg);
   word-break: break-word;
 }
 
@@ -10,18 +17,18 @@ body {
 }
 
 main {
-  background-color: hsl(0deg 0% 97.5%);
+  background-color: var(--color-canvas-back);
   position: relative;
-  max-width: 40em;
   margin: 0 auto;
-  padding: 0 calc(2em + 2ex);
+  padding: 0 calc(2 * (1em + 1ex));
+  max-width: calc(30 * (1em + 1ex));
 }
 
-@media (width >= 40em) and (height >= 20em) {
+@media (width >= calc(30 * (1em + 1ex))) and (height >= calc(15 * (1em + 1ex))) {
   main {
     /* Go all Tschichold when supported */
-    margin: 11.1vh 22.2vw 22.2vh 11.1vw;
-    border: 1px solid hsl(214deg 13% 90%);
+    margin: 11vh 22.2vw 22.2vh 11.1vw;
+    border: 1px solid var(--color-border);
     border-radius: 3px;
   }
 }
@@ -31,15 +38,11 @@ main > div {
 }
 
 section {
-  margin: calc(2em + 2ex) calc(-2em - 2ex);
-  padding: calc(2em + 2ex);
-  border: 0 solid #e1e4e8;
+  margin: calc(2 * (1em + 1ex)) calc(-2 * (1em + 1ex));
+  padding: calc(2 * (1em + 1ex));
+  border: 0 solid var(--color-border);
   border-top-width: 1px;
   border-bottom-width: 1px;
-}
-
-section + section {
-  margin-top: calc(-2em - 2ex - 1px);
 }
 
 section > :first-child {
@@ -48,6 +51,10 @@ section > :first-child {
 
 section > :last-child {
   margin-bottom: 0;
+}
+
+section + section {
+  margin-top: calc(-2 * (1em + 1ex) - 1px);
 }
 
 section:first-child {
@@ -65,29 +72,43 @@ section:last-child {
 }
 
 .highlight {
-  background-color: hsl(0deg 0% 100%);
+  background-color: var(--color-canvas-front);
 }
 
 * {
-  line-height: calc(1em + 1ex);
+  line-height: calc(1 * (1em + 1ex));
   box-sizing: border-box;
+}
+
+code,
+kbd,
+.write,
+.draw {
+  font-feature-settings: normal;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+}
+
+code,
+kbd {
+  font-size: smaller;
 }
 
 p,
 h1 {
-  margin-top: calc(1em + 1ex);
-  margin-bottom: calc(1em + 1ex);
+  margin-top: calc(1 * (1em + 1ex));
+  margin-bottom: calc(1 * (1em + 1ex));
 }
 
 h1 {
-  font-size: 3em;
+  font-size: 2em;
   font-weight: 100;
   text-align: center;
 }
 
 a {
   text-decoration: none;
-  color: #0367d8;
+  color: var(--color-hl);
   transition: 200ms;
   transition-property: color;
 }
@@ -108,13 +129,12 @@ template {
   overflow: hidden;
 }
 
-textarea,
+.write,
 .draw {
-  /* Can’t use a nice font: kerning renders differently in textareas. */
-  font-family: monospace;
-  font-size: 16px;
+  font-size: 14px;
+  tab-size: 4;
   letter-spacing: normal;
-  line-height: calc(1em + 1ex);
+  line-height: calc(1 * (1em + 1ex));
   white-space: pre-wrap;
   word-wrap: break-word;
   background: transparent;
@@ -129,15 +149,18 @@ textarea,
   resize: none;
 }
 
-.draw {
-  -webkit-print-color-adjust: exact;
-  color: transparent;
+.write::selection {
+  color: var(--color-fg);
+  background-color: hsl(42.22deg 74.31% 57.25% / 66%);
 }
 
-textarea {
+.write {
   position: absolute;
   top: 0;
-  color: inherit;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color: transparent;
+  caret-color: var(--color-hl);
 }
 
 .credits {
@@ -146,25 +169,10 @@ textarea {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    background-color: hsl(214deg 13% 7.5%);
-    color: hsl(214deg 13% 95%);
-  }
-
-  main {
-    background-color: hsl(214deg 13% 5%);
-  }
-
-  @media (width >= 40em) and (height >= 20em) {
-    main {
-      border-color: hsl(214deg 13% 12.5%);
-    }
-  }
-
-  .highlight {
-    background-color: hsl(214deg 13% 2.5%);
-  }
-
-  section {
-    border-color: hsl(214deg 13% 12.5%);
+    --color-canvas-back: #0d1117;
+    --color-canvas-front: #161b22;
+    --color-border: #30363d;
+    --color-hl: #2f81f7;
+    --color-fg: #f6f8fa;
   }
 }
