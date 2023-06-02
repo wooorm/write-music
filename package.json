@@ -36,9 +36,9 @@
   "scripts": {
     "build": "tsc --build --clean && tsc --build && type-coverage",
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
-    "generate:js": "esbuild src/index.js --bundle --minify --target=es6 --outfile=dest/index.nomodule.js && esbuild src/index.js --bundle --minify --target=es2020 --format=esm --outfile=dest/index.module.js",
+    "generate:js": "esbuild src/index.js --bundle --minify --target=es6 --outfile=dest/index.js && esbuild src/index.js --bundle --minify --target=es2020 --format=esm --outfile=dest/index.mjs",
     "generate:css": "postcss src/index.css > dest/index.css",
-    "generate:html": "rehype -u preset-minify -u prevent-favicon-request src -o dest",
+    "generate:html": "rehype -u rehype-preset-minify -u rehype-prevent-favicon-request src/ -o dest/",
     "generate": "npm run generate:js && npm run generate:css && npm run generate:html",
     "test": "npm run build && npm run format && npm run generate"
   },
@@ -68,7 +68,7 @@
   },
   "remarkConfig": {
     "plugins": [
-      "preset-wooorm"
+      "remark-preset-wooorm"
     ]
   },
   "typeCoverage": {
