@@ -12,9 +12,9 @@
   "devDependencies": {
     "@types/debounce": "^1.0.0",
     "@types/virtual-dom": "^2.0.0",
-    "cssnano": "^5.0.0",
+    "cssnano": "^6.0.0",
     "debounce": "^1.0.0",
-    "esbuild": "^0.15.0",
+    "esbuild": "^0.17.0",
     "global": "^4.0.0",
     "postcss-cli": "^10.0.0",
     "prettier": "^2.0.0",
@@ -24,14 +24,14 @@
     "remark-cli": "^11.0.0",
     "remark-preset-wooorm": "^9.0.0",
     "retext-english": "^4.0.0",
-    "stylelint": "^14.0.0",
-    "stylelint-config-standard": "^29.0.0",
+    "stylelint": "^15.0.0",
+    "stylelint-config-standard": "^33.0.0",
     "type-coverage": "^2.0.0",
-    "typescript": "^4.0.0",
+    "typescript": "^5.0.0",
     "unified": "^10.0.0",
     "unist-util-visit": "^4.0.0",
     "virtual-dom": "^2.0.0",
-    "xo": "^0.53.0"
+    "xo": "^0.54.0"
   },
   "scripts": {
     "build": "tsc --build --clean && tsc --build && type-coverage",

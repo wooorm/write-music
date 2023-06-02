@@ -17,7 +17,7 @@ main {
   padding: 0 calc(2em + 2ex);
 }
 
-@media (min-width: 40em) and (min-height: 20em) {
+@media (width >= 40em) and (height >= 20em) {
   main {
     /* Go all Tschichold when supported */
     margin: 11.1vh 22.2vw 22.2vh 11.1vw;
@@ -154,7 +154,7 @@ textarea {
     background-color: hsl(214deg 13% 5%);
   }
 
-  @media (min-width: 40em) and (min-height: 20em) {
+  @media (width >= 40em) and (height >= 20em) {
     main {
       border-color: hsl(214deg 13% 12.5%);
     }
