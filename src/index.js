@@ -2,12 +2,15 @@
 /* eslint-env browser */
 
 /**
- * @typedef {import('virtual-dom').VNode} VNode
- * @typedef {import('virtual-dom').VProperties} VProperties
+ * @typedef {import('nlcst').Content} NlcstContent
  * @typedef {import('nlcst').Parent} NlcstParent
  * @typedef {import('nlcst').Root} NlcstRoot
- * @typedef {import('nlcst').Content} NlcstContent
- * @typedef {NlcstRoot | NlcstContent} NlcstNode
+ * @typedef {import('virtual-dom').VNode} VNode
+ */
+
+/**
+ * @typedef {NlcstRoot | NlcstContent} NlcstNodes
+ * @typedef {Extract<NlcstNodes, NlcstParent>} NlcstParents
  */
 
 import virtualDom from 'virtual-dom'
@@ -25,7 +28,7 @@ let tree = render(document.querySelectorAll('template')[0].innerHTML)
 let dom = main.appendChild(create(tree))
 
 /**
- * @param {KeyboardEvent|MouseEvent|ClipboardEvent} ev
+ * @param {KeyboardEvent | MouseEvent | ClipboardEvent} ev
  */
 function onchange(ev) {
   if (
@@ -111,15 +114,15 @@ function render(text) {
   ])
 
   /**
-   * @param {NlcstParent} node
+   * @param {NlcstParents} node
    * @param {Array<number>} parentIds
-   * @returns {Array<VNode|string>}
+   * @returns {Array<VNode | string>}
    */
   function all(node, parentIds) {
     const children = node.children
     const length = children.length
     let index = -1
-    /** @type {Array<VNode|string>} */
+    /** @type {Array<VNode | string>} */
     const results = []
 
     while (++index < length) {
@@ -137,12 +140,12 @@ function render(text) {
   }
 
   /**
-   * @param {NlcstNode} node
+   * @param {NlcstNodes} node
    * @param {Array<number>} parentIds
-   * @returns {string|VNode|Array<VNode|string>}
+   * @returns {Array<VNode | string> | VNode | string}
    */
   function one(node, parentIds) {
-    /** @type {string|VNode|Array<VNode|string>} */
+    /** @type {Array<VNode | string> | VNode | string} */
     let result = 'value' in node ? node.value : all(node, parentIds)
     const styles = style(node)
     const id = parentIds.join('-') + '-' + key
@@ -160,8 +163,8 @@ function render(text) {
    * `white-space: pre-wrap`.
    * Add a `br` to make the last newline explicit.
    *
-   * @param {Array<VNode|string>} nodes
-   * @returns {Array<VNode|string>}
+   * @param {Array<VNode | string>} nodes
+   * @returns {Array<VNode | string>}
    */
   function pad(nodes) {
     const tail = nodes[nodes.length - 1]
@@ -175,8 +178,8 @@ function render(text) {
 }
 
 /**
- * @param {NlcstNode} node
- * @returns {Record<string, string>|void}
+ * @param {NlcstNodes} node
+ * @returns {Record<string, string> | undefined}
  */
 function style(node) {
   if (node.type === 'SentenceNode') {
@@ -187,7 +190,7 @@ function style(node) {
 }
 
 /**
- * @param {NlcstParent} node
+ * @param {NlcstParents} node
  * @returns {number}
  */
 function count(node) {
@@ -226,14 +229,10 @@ function hues() {
 }
 
 /**
- * @param {Element|null} node
- * @returns {number|void}
+ * @param {Element} node
+ * @returns {number}
  */
 function rows(node) {
-  if (!node || node.nodeType !== document.ELEMENT_NODE) {
-    return
-  }
-
   return Math.ceil(
     node.getBoundingClientRect().height /
       Number.parseInt(window.getComputedStyle(node).lineHeight, 10)
