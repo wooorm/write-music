@@ -1,19 +1,17 @@
 {
-  "include": ["**/*.js", "**/*.jsx"],
-  "exclude": ["dest/", "node_modules/"],
   "compilerOptions": {
-    "customConditions": ["development"],
     "checkJs": true,
+    "customConditions": ["development"],
+    "declarationMap": true,
     "declaration": true,
     "emitDeclarationOnly": true,
     "exactOptionalPropertyTypes": true,
-    "forceConsistentCasingInFileNames": true,
-    "jsx": "react-jsx",
-    "lib": ["es2020"],
+    "jsx": "preserve",
+    "lib": ["dom", "es2023"],
     "module": "node16",
-    "newLine": "lf",
-    "skipLibCheck": true,
     "strict": true,
-    "target": "es2020"
-  }
+    "target": "es2023"
+  },
+  "exclude": ["dest/", "node_modules/"],
+  "include": ["**/*.jsx", "**/*.js"]
 }

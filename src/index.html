@@ -1,12 +1,12 @@
 <!doctypehtml>
 <meta charset=utf8>
 <title>write-music</title>
-<meta property=og:title content=write-music>
-<meta name=viewport content=width=device-width,initial-scale=1>
-<meta name=description content="Visualise sentence length">
-<meta property=og:description content="Visualise sentence length">
-<meta property=og:image content=https://raw.githubusercontent.com/wooorm/write-music/main/screenshot.png>
-<link rel=stylesheet href=index.css>
+<meta content=write-music property=og:title>
+<meta content=initial-scale=1,width=device-width name=viewport>
+<meta content="Visualise sentence length" name=description>
+<meta content="Visualise sentence length" property=og:description>
+<meta content=https://raw.githubusercontent.com/wooorm/write-music/main/screenshot.png property=og:image>
+<link href=index.css rel=stylesheet>
 <main></main>
 <template>This sentence has five words. Here are five more words. Five word sentences are fine. But several together become monotonous. Listen to what is happening. The writing is getting boring. The sound of it drones. It's like a stuck record. The ear demands some variety.
 
@@ -15,5 +15,5 @@ Now listen. I vary the sentence length, and I create music. Music. The writing s
 So write with a combination of short, medium, and long sentences. Create a sound that pleases the reader's ear. Don't just write words. Write music.
 
 - Gary Provost (garyprovost.com)</template>
-<script type=module src=index.mjs></script>
-<script nomodule src=index.js></script>
+<script src=index.module.js type=module></script>
+<script nomodule src=index.nomodule.js></script>

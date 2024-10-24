@@ -1,6 +1,8 @@
-.DS_Store
-*.log
-*.d.ts
-node_modules/
 dest/
+node_modules/
+*.d.ts
+*.log
+*.map
+*.tsbuildinfo
+.DS_Store
 yarn.lock

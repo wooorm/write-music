@@ -1,34 +1,29 @@
-/// <reference lib="dom" />
 /* eslint-env browser */
 
-/**
- * @typedef {import('nlcst').Content} NlcstContent
- * @typedef {import('nlcst').Parent} NlcstParent
- * @typedef {import('nlcst').Root} NlcstRoot
- */
+/// <reference lib="dom" />
 
 /**
- * @typedef {NlcstRoot | NlcstContent} NlcstNodes
- * @typedef {Extract<NlcstNodes, NlcstParent>} NlcstParents
+ * @import {Nodes, Parents} from 'nlcst'
  */
 
-import React from 'react'
-// eslint-disable-next-line n/file-extension-in-import
-import ReactDom from 'react-dom/client'
 import {ParseEnglish} from 'parse-english'
+import ReactDom from 'react-dom/client'
+import React from 'react'
 import {visit} from 'unist-util-visit'
 
-const main = document.querySelectorAll('main')[0]
-const parser = new ParseEnglish()
+const $main = /** @type {HTMLElement} */ (document.querySelector('main'))
+const $template = /** @type {HTMLTemplateElement} */ (
+  document.querySelector('template')
+)
 const hues = createHues()
+const parser = new ParseEnglish()
 
-const root = ReactDom.createRoot(main)
-const sample = document.querySelectorAll('template')[0].innerHTML
+const root = ReactDom.createRoot($main)
 
 root.render(React.createElement(Playground))
 
 function Playground() {
-  const [text, setText] = React.useState(sample)
+  const [text, setText] = React.useState($template.innerHTML)
   const tree = parser.parse(text)
 
   return (
@@ -40,37 +35,25 @@ function Playground() {
       </section>
       <div className="editor">
         <div className="draw">
-          {one(tree)}
-          {/* Trailing whitespace in a `textarea` is shown, but not in a `div`
-          with `white-space: pre-wrap`.
-          Add a `br` to make the last newline explicit. */}
+          {all(tree)}
+          {/* Trailing whitespace in a `textarea` is shown,
+          but not in a `div` with `white-space: pre-wrap`;
+          add a `br` to make the last newline explicit. */}
           {/\n[ \t]*$/.test(text) ? <br /> : undefined}
         </div>
         <textarea
-          spellCheck="true"
           className="write"
-          value={text}
           onChange={(event) => setText(event.target.value)}
           rows={text.split('\n').length + 1}
+          spellCheck="false"
+          value={text}
         />
       </div>
-      <section className="highlight">
-        <p>
-          Based on a tip by{' '}
-          <a href="https://www.garyprovost.com">Gary Provost</a> (“Vary sentence
-          length”), and a{' '}
-          <a href="https://www.helpscout.net/blog/damn-hard-writing/">
-            visualisation by Gregory Ciotti
-          </a>
-          .
-        </p>
-        <p>P.S. You can edit the text above.</p>
-      </section>
       <section className="credits">
         <p>
           <a href="https://github.com/wooorm/write-music">Fork this website</a>{' '}
           •{' '}
-          <a href="https://github.com/wooorm/write-music/blob/src/license">
+          <a href="https://github.com/wooorm/write-music/blob/main/license">
             MIT
           </a>{' '}
           • <a href="https://github.com/wooorm">@wooorm</a>
@@ -81,17 +64,15 @@ function Playground() {
 }
 
 /**
- * @param {NlcstParents} node
+ * @param {Parents} parent
  * @returns {Array<JSX.Element | string>}
  */
-function all(node) {
+function all(parent) {
   /** @type {Array<JSX.Element | string>} */
   const results = []
-  let index = -1
 
-  while (++index < node.children.length) {
-    const result = one(node.children[index])
-
+  for (const child of parent.children) {
+    const result = one(child)
     if (Array.isArray(result)) {
       results.push(...result)
     } else {
@@ -103,7 +84,7 @@ function all(node) {
 }
 
 /**
- * @param {NlcstNodes} node
+ * @param {Nodes} node
  * @returns {Array<JSX.Element | string> | JSX.Element | string}
  */
 function one(node) {
@@ -117,16 +98,9 @@ function one(node) {
     })
 
     const hue = words < hues.length ? hues[words] : hues[hues.length - 1]
+    const backgroundColor = 'hsl(' + hue + 'deg 93% 70% / 50%)'
 
-    return (
-      <span
-        style={{
-          backgroundColor: 'hsl(' + [hue, '93%', '70%', 0.5].join(', ') + ')'
-        }}
-      >
-        {result}
-      </span>
-    )
+    return <span style={{backgroundColor}}>{result}</span>
   }
 
   return result
