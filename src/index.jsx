@@ -49,6 +49,18 @@ function Playground() {
           value={text}
         />
       </div>
+      <section className="highlight">
+        <p>
+          Based on a tip by{' '}
+          <a href="https://www.garyprovost.com">Gary Provost</a> (“Vary sentence
+          length”), and a{' '}
+          <a href="https://www.helpscout.net/blog/damn-hard-writing/">
+            visualisation by Gregory Ciotti
+          </a>
+          .
+        </p>
+        <p>P.S. You can edit the text above.</p>
+      </section>
       <section className="credits">
         <p>
           <a href="https://github.com/wooorm/write-music">Fork this website</a>{' '}
